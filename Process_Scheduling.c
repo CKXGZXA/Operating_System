@@ -17,7 +17,7 @@ typedef  struct  Job {
     int waited_time;	// 等待时间
     int w_cycle_time;	// 带权等待时间
     struct Job  *next;
-} Job;
+} Job; 
 
 /*作业队列的结构体*/
 typedef struct linked_queue
@@ -115,7 +115,7 @@ void print_menu()
 }
 
 // 
-init_jobs() 
+void init_jobs() 
 {
     // 根据题目要求初始化每个进程的信息
     job_array[0].job_pid = 'A'; job_array[0].arrive_time = 0; job_array[0].require_time = 3;
@@ -125,7 +125,7 @@ init_jobs()
     job_array[4].job_pid = 'E'; job_array[4].arrive_time = 8; job_array[4].require_time = 2;
 }
 
-init_queues()
+void init_queues()
 {
     // 释放原队列
     free(created_queue);
@@ -234,12 +234,17 @@ void fcfs_jobs()
                 // 记录该作业完成时间
                 running_job->ended_time = system_time;
                 // 计算其各种时间(周转时间、等待时间、带权周转时间)
+                record_job_time(running_job);
                 // 将该作业链入完成队列
-                
                 en_queue_node(ended_queue, running_job);
-                
+                printf("作业: %c已完成, 开始时间: %d 完成时间: %d", 
+                                running_job->job_pid, running_job->ended_time - running_job->require_time, running_job->ended_time);
+                // 调度新的作业使用处理机
+                if (!is_queue_empty(ready_queue))
+                    running_job = de_queue(ready_queue);
+                else
+                    running_job = NULL;
             }
-            
         }
         
         
