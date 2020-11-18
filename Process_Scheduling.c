@@ -69,7 +69,7 @@ void en_queue_node(linked_queue * queue, Job * en_queue_pcb_node);
 // 得到需求时间最短的作业
 Job * get_shortest_job(linked_queue *queue);
 // 得到最高响应比作业
-Job * get_high_response_job(linked_queue *queue);
+Job * get_high_response_job(linked_queue *queue, int system_time);
 
 /* 程序入口 */
 int main(int argc, char const *argv[])
@@ -124,7 +124,6 @@ void print_menu()
     printf("\n======================\n");
 }
 
-// 
 void init_jobs() 
 {
     // 根据题目要求初始化每个进程的信息
@@ -225,7 +224,7 @@ void fcfs_jobs()
         if (running_job == NULL)
         {
             // 无作业正在使用处理机
-            // 当前就绪队列不为空时, 则将就绪队列出队一个作业去使用处理机
+            // 当前就绪队列不为空时, 则从就绪队列出队一个作业去使用处理机
             if (!is_queue_empty(ready_queue))
                 running_job = de_queue(ready_queue);
             else
@@ -352,7 +351,18 @@ void sjf_jobs()
 
 void rr_jobs(int q)
 {   // 时间片轮转RR算法, 传入时间片参数q
+    int system_time = 0;        // 系统当前时间
+    Job * running_job = NULL;          // 当前正在使用处理机的作业
 
+    while (!is_queue_empty(created_queue) || !is_queue_empty(ready_queue) || running_job != NULL)
+    {
+        
+    }
+
+    printf("RR算法(时间片为%d)的调度信息:\n",q);
+    printf("--------------------\n");
+    print_average_value();
+    printf("--------------------\n");
 }
 
 void hrrn_jobs() 
@@ -385,7 +395,7 @@ void hrrn_jobs()
             // 无作业正在使用处理机
             // 当前就绪队列不为空时, 则将就绪队列出队一个所需时间最短的作业去使用处理机
             if (!is_queue_empty(ready_queue))
-                running_job = get_high_response_job(ready_queue);
+                running_job = get_high_response_job(ready_queue, system_time);
             else
             {
                 // 就绪队列为空时, 系统时间步进一个时间单位, 退出该层调度的循环
@@ -411,7 +421,7 @@ void hrrn_jobs()
                                 running_job->job_pid, running_job->ended_time - running_job->require_time, running_job->ended_time);
                 // 调度新的作业使用处理机
                 if (!is_queue_empty(ready_queue))
-                    running_job = get_high_response_job(ready_queue);
+                    running_job = get_high_response_job(ready_queue, system_time);
                 else
                     running_job = NULL;
             }
@@ -423,7 +433,7 @@ void hrrn_jobs()
         if (running_job != NULL)
             running_job->used_time++;
     }
-    printf("HHRN算法的调度信息:\n");
+    printf("HRRN算法的调度信息:\n");
     printf("--------------------\n");
     print_average_value();
     printf("--------------------\n");    
@@ -478,6 +488,7 @@ Job * peek_queue(linked_queue * queue)
     return queue->front;
 }
 
+// 得到队列中需求时间最短的作业
 Job * get_shortest_job(linked_queue *queue)
 {
     Job *p, *q, *shortest_job, *pre;
@@ -514,15 +525,16 @@ Job * get_shortest_job(linked_queue *queue)
     return shortest_job;  
 }
 
-Job * get_high_response_job(linked_queue * queue)
+// 得到队列中最高响应比的作业
+Job * get_high_response_job(linked_queue * queue, int system_time)
 {
     Job *p, *q, *shortest_job, *pre;
     shortest_job = queue->front;
     pre = queue->front;
     for (p = queue->front; p != NULL; p = p->next)
     {
-        float res1 = (float)(shortest_job->waited_time + shortest_job->require_time)/(float)(shortest_job->require_time);
-        float res2 = (float)(shortest_job->waited_time + shortest_job->require_time)/(float)(shortest_job->require_time);
+        float res1 = (float)(system_time - shortest_job->arrive_time + shortest_job->require_time)/(float)(shortest_job->require_time);
+        float res2 = (float)(system_time - p->arrive_time + p->require_time)/(float)(p->require_time);
         if (res1 < res2)
         {
             shortest_job = p;
