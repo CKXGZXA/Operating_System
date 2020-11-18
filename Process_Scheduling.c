@@ -1,86 +1,88 @@
-// æ¨¡æ‹Ÿå®žçŽ°è¿›ç¨‹è°ƒåº¦çš„ç»å…¸ç®—æ³•ï¼ŒåŒ…æ‹¬FCFSã€SJFï¼ˆSPFï¼‰ã€HRRNå’ŒRR(æ—¶é—´ç‰‡å¤§å°åˆ†åˆ«ä¸º1å’Œ4)ã€‚
-// è¾“å‡ºè°ƒåº¦è¿‡ç¨‹ï¼Œå¹¶è®¡ç®—ä¸åŒè°ƒåº¦ç®—æ³•çš„å‘¨è½¬æ—¶é—´ã€å¹³å‡å‘¨è½¬æ—¶é—´ã€å¸¦æƒå‘¨è½¬æ—¶é—´ã€å¹³å‡å¸¦æƒå‘¨è½¬æ—¶é—´ã€
-// ç­‰å¾…æ—¶é—´ã€å¹³å‡ç­‰å¾…æ—¶é—´ç­‰ä¿¡æ¯ã€‚
+// Ä£ÄâÊµÏÖ½ø³Ìµ÷¶ÈµÄ¾­µäËã·¨£¬°üÀ¨FCFS¡¢SJF£¨SPF£©¡¢HRRNºÍRR(Ê±¼äÆ¬´óÐ¡·Ö±ðÎª1ºÍ4)¡£
+// Êä³öµ÷¶È¹ý³Ì£¬²¢¼ÆËã²»Í¬µ÷¶ÈËã·¨µÄÖÜ×ªÊ±¼ä¡¢Æ½¾ùÖÜ×ªÊ±¼ä¡¢´øÈ¨ÖÜ×ªÊ±¼ä¡¢Æ½¾ù´øÈ¨ÖÜ×ªÊ±¼ä¡¢
+// µÈ´ýÊ±¼ä¡¢Æ½¾ùµÈ´ýÊ±¼äµÈÐÅÏ¢¡£
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
 #define TRUE 1
 #define FALSE 0
-#define LEN 5           // ä½œä¸šæ•°ç»„å¤§å°
+#define LEN 5           // ×÷ÒµÊý×é´óÐ¡
 
 
 typedef  struct  Job { 
-    char job_pid; 		// ä»»åŠ¡å·
-    int arrive_time;	// åˆ°è¾¾æ—¶é—´
-    int require_time;	// è¦æ±‚æœåŠ¡æ—¶é—´
-    int used_time;      // å·²ç”¨æ—¶é—´
-    int ended_time;		// å®Œæˆæ—¶é—´
-    int cycle_time;	    // å‘¨è½¬æ—¶é—´
-    int waited_time;	// ç­‰å¾…æ—¶é—´
-    float w_cycle_time;	// å¸¦æƒç­‰å¾…æ—¶é—´
+    char job_pid; 		// ÈÎÎñºÅ
+    int arrive_time;	// µ½´ïÊ±¼ä
+    int require_time;	// ÒªÇó·þÎñÊ±¼ä
+    int used_time;      // ÒÑÓÃÊ±¼ä
+    int ended_time;		// Íê³ÉÊ±¼ä
+    int cycle_time;	    // ÖÜ×ªÊ±¼ä
+    int waited_time;	// µÈ´ýÊ±¼ä
+    float w_cycle_time;	// ´øÈ¨µÈ´ýÊ±¼ä
     struct Job  *next;
 } Job; 
 
-/*ä½œä¸šé˜Ÿåˆ—çš„ç»“æž„ä½“*/
+/*×÷Òµ¶ÓÁÐµÄ½á¹¹Ìå*/
 typedef struct linked_queue
 {
-    Job * front ;        //é˜Ÿå¤´æŒ‡å‘ç»“ç‚¹çš„æŒ‡é’ˆ
-    Job * rear;          //é˜Ÿå°¾æŒ‡å‘ç»“ç‚¹çš„æŒ‡é’ˆ
-    int count;           //é˜Ÿåˆ—å½“å‰é•¿åº¦
+    Job * front ;        //¶ÓÍ·Ö¸Ïò½áµãµÄÖ¸Õë
+    Job * rear;          //¶ÓÎ²Ö¸Ïò½áµãµÄÖ¸Õë
+    int count;           //¶ÓÁÐµ±Ç°³¤¶È
 }linked_queue;
 
-// ä½œä¸šæ•°ç»„å…¨å±€å˜é‡
+// ×÷ÒµÊý×éÈ«¾Ö±äÁ¿
 struct Job job_array[LEN];
 
-// åŽå¤‡é˜Ÿåˆ—
+// ºó±¸¶ÓÁÐ
 linked_queue * created_queue;
-// å°±ç»ªé˜Ÿåˆ—
+// ¾ÍÐ÷¶ÓÁÐ
 linked_queue * ready_queue;
-// å®Œæˆé˜Ÿåˆ—
+// Íê³É¶ÓÁÐ
 linked_queue * ended_queue;
 
-// åˆå§‹åŒ–ä½œä¸šæ•°ç»„çš„æ¯ä¸ªä½œä¸šä¿¡æ¯
+// ³õÊ¼»¯×÷ÒµÊý×éµÄÃ¿¸ö×÷ÒµÐÅÏ¢
 void init_jobs();
-// åˆå§‹åŒ–å„ä¸ªé˜Ÿåˆ—
+// ³õÊ¼»¯¸÷¸ö¶ÓÁÐ
 void init_queues();
-// æ‰“å°èœå•
+// ´òÓ¡²Ëµ¥
 void print_menu();
-// å…ˆæ¥å…ˆæœåŠ¡è°ƒåº¦ç®—æ³• (FCFS)
+// ÏÈÀ´ÏÈ·þÎñµ÷¶ÈËã·¨ (FCFS)
 void fcfs_jobs();
-// çŸ­ä½œä¸šä¼˜å…ˆè°ƒåº¦ç®—æ³• (SJF)
+// ¶Ì×÷ÒµÓÅÏÈµ÷¶ÈËã·¨ (SJF)
 void sjf_jobs();
-// è½®è½¬æ³•(RR)
+// ÂÖ×ª·¨(RR)
 void rr_jobs(int q);
-// æœ€é«˜å“åº”æ¯”è°ƒåº¦ç®—æ³• (HRRN)
+// ×î¸ßÏìÓ¦±Èµ÷¶ÈËã·¨ (HRRN)
 void hrrn_jobs();
 
-// æ‰“å°è¾“å‡ºæ‰€æœ‰ä½œä¸šçš„å„ç§æ—¶é—´å¹³å‡å€¼
+// ´òÓ¡Êä³öËùÓÐ×÷ÒµµÄ¸÷ÖÖÊ±¼äÆ½¾ùÖµ
 void print_average_value();
 int is_queue_empty(linked_queue * queue);
-// ä½œä¸šå‡ºé˜Ÿåˆ—å‡½æ•°
+// ×÷Òµ³ö¶ÓÁÐº¯Êý
 Job * de_queue(linked_queue * queue);
-// è¿”å›žé˜Ÿå¤´ä½œä¸š(ä¸å‡ºé˜Ÿ)
+// ·µ»Ø¶ÓÍ·×÷Òµ(²»³ö¶Ó)
 Job * peek_queue(linked_queue * queue);
-// è®¡ç®—è¯¥ä½œä¸šçš„å„ç§æ—¶é—´
+// ¼ÆËã¸Ã×÷ÒµµÄ¸÷ÖÖÊ±¼ä
 void record_job_time(Job * record_job);
-// ä½œä¸šèŠ‚ç‚¹å…¥é˜Ÿ
+// ×÷Òµ½ÚµãÈë¶Ó
 void en_queue_node(linked_queue * queue, Job * en_queue_pcb_node);
-// å¾—åˆ°éœ€æ±‚æ—¶é—´æœ€çŸ­çš„ä½œä¸š
+// µÃµ½ÐèÇóÊ±¼ä×î¶ÌµÄ×÷Òµ
 Job * get_shortest_job(linked_queue *queue);
+// µÃµ½×î¸ßÏìÓ¦±È×÷Òµ
+Job * get_high_response_job(linked_queue *queue);
 
-/* ç¨‹åºå…¥å£ */
+/* ³ÌÐòÈë¿Ú */
 int main(int argc, char const *argv[])
 {
-    // è®°å½•ç”¨æˆ·é”®ç›˜è¾“å…¥çš„é€‰æ‹©é”®
+    // ¼ÇÂ¼ÓÃ»§¼üÅÌÊäÈëµÄÑ¡Ôñ¼ü
     char user_opt;
     while (1)
     {
-        // åˆå§‹åŒ–ä½œä¸šæ•°ç»„ä¸­æ¯ä¸ªä½œä¸š
+        // ³õÊ¼»¯×÷ÒµÊý×éÖÐÃ¿¸ö×÷Òµ
         init_jobs();
-        // åˆå§‹åŒ–å„ä¸ªé˜Ÿåˆ—
+        // ³õÊ¼»¯¸÷¸ö¶ÓÁÐ
         init_queues();
-        // æ‰“å°èœå•
+        // ´òÓ¡²Ëµ¥
         print_menu();
         scanf("%c", &user_opt);
         getchar();
@@ -99,7 +101,7 @@ int main(int argc, char const *argv[])
             rr_jobs(4);
             break;
         case '5':
-            // hrrn_jobs();
+            hrrn_jobs();
             break;
         case 'q':
             exit(0);
@@ -112,20 +114,20 @@ int main(int argc, char const *argv[])
 void print_menu()
 {
     printf("\n======================\n");
-    printf("æŒ‰1é”®FCFS\n");
-    printf("æŒ‰2é”®SJF \n");
-    printf("æŒ‰3é”®RRæ—¶é—´ç‰‡è½®è½¬(q=1)\n");
-    printf("æŒ‰4é”®RRæ—¶é—´ç‰‡è½®è½¬(q=4)\n");
-    printf("æŒ‰5é”®HRRN\n");
-    printf("æŒ‰qé”®é€€å‡º \n");
-    printf("æ‚¨çš„é€‰æ‹©: ");
+    printf("°´1¼üFCFS\n");
+    printf("°´2¼üSJF \n");
+    printf("°´3¼üRRÊ±¼äÆ¬ÂÖ×ª(q=1)\n");
+    printf("°´4¼üRRÊ±¼äÆ¬ÂÖ×ª(q=4)\n");
+    printf("°´5¼üHRRN\n");
+    printf("°´q¼üÍË³ö \n");
+    printf("ÄúµÄÑ¡Ôñ: ");
     printf("\n======================\n");
 }
 
 // 
 void init_jobs() 
 {
-    // æ ¹æ®é¢˜ç›®è¦æ±‚åˆå§‹åŒ–æ¯ä¸ªè¿›ç¨‹çš„ä¿¡æ¯
+    // ¸ù¾ÝÌâÄ¿ÒªÇó³õÊ¼»¯Ã¿¸ö½ø³ÌµÄÐÅÏ¢
     job_array[0].job_pid = 'A'; job_array[0].arrive_time = 0; job_array[0].require_time = 3;
     job_array[1].job_pid = 'B'; job_array[1].arrive_time = 2; job_array[1].require_time = 6;
     job_array[2].job_pid = 'C'; job_array[2].arrive_time = 4; job_array[2].require_time = 4;
@@ -135,24 +137,24 @@ void init_jobs()
 
 void init_queues()
 {
-    // é‡Šæ”¾åŽŸé˜Ÿåˆ—
+    // ÊÍ·ÅÔ­¶ÓÁÐ
     free(created_queue);
     free(ready_queue);
     free(ended_queue);
-    // åŽå¤‡é˜Ÿåˆ— å¹¶åˆå§‹åŒ–
+    // ºó±¸¶ÓÁÐ ²¢³õÊ¼»¯
     created_queue = (linked_queue *) malloc(sizeof(linked_queue));
     created_queue->front = created_queue->rear = NULL;
     created_queue->count = 0;
-    // å°±ç»ªé˜Ÿåˆ— å¹¶åˆå§‹åŒ–
+    // ¾ÍÐ÷¶ÓÁÐ ²¢³õÊ¼»¯
     ready_queue = (linked_queue *) malloc(sizeof(linked_queue));
     ready_queue->front = ready_queue->rear = NULL;
     ready_queue->count = 0;
-    // å®Œæˆé˜Ÿåˆ— å¹¶åˆå§‹åŒ–
+    // Íê³É¶ÓÁÐ ²¢³õÊ¼»¯
     ended_queue = (linked_queue *) malloc(sizeof(linked_queue));
     ended_queue->front = ended_queue->rear = NULL;
     ended_queue->count = 0;
 
-    // å°†ä½œä¸šæ•°ç»„ä¸­æ‰€æœ‰ä½œä¸šæ”¾å…¥åŽå¤‡é˜Ÿåˆ—
+    // ½«×÷ÒµÊý×éÖÐËùÓÐ×÷Òµ·ÅÈëºó±¸¶ÓÁÐ
     int i;
     for ( i = 0; i < LEN; i++)
         en_queue_node(created_queue, &job_array[i]);
@@ -161,7 +163,7 @@ void init_queues()
 
 void record_job_time(Job * record_job)
 {
-    // è®¡ç®—è¯¥ä½œä¸šçš„å„ç§æ—¶é—´
+    // ¼ÆËã¸Ã×÷ÒµµÄ¸÷ÖÖÊ±¼ä
     record_job->cycle_time = record_job->ended_time - record_job->arrive_time;
     record_job->waited_time = record_job->cycle_time - record_job->require_time;
     record_job->w_cycle_time = (float) record_job->cycle_time / (float) record_job->require_time;
@@ -169,13 +171,13 @@ void record_job_time(Job * record_job)
 
 void print_average_value()
 {
-    // å¹³å‡å‘¨è½¬æ—¶é—´
+    // Æ½¾ùÖÜ×ªÊ±¼ä
     float avg_cycle_time = 0;
-    // å¹³å‡ç­‰å¾…æ—¶é—´
+    // Æ½¾ùµÈ´ýÊ±¼ä
     float avg_waited_time = 0;
-    // å¹³å‡å¸¦æƒå‘¨è½¬æ—¶é—´
+    // Æ½¾ù´øÈ¨ÖÜ×ªÊ±¼ä
     float avg_w_cycle_time = 0;
-    // éåŽ†ä½œä¸šæ•°ç»„, æ±‚å’Œ
+    // ±éÀú×÷ÒµÊý×é, ÇóºÍ
     int i;
     for ( i = 0; i < LEN; i++)
     {
@@ -183,75 +185,75 @@ void print_average_value()
         avg_waited_time     += (float) job_array[i].waited_time;
         avg_w_cycle_time    += job_array[i].w_cycle_time;
     }
-    // è®¡ç®—å‡å€¼
+    // ¼ÆËã¾ùÖµ
     avg_cycle_time      /= (float) LEN;
     avg_waited_time     /= (float) LEN;
     avg_w_cycle_time    /= (float) LEN;
 
-    printf("å¹³å‡å‘¨è½¬æ—¶é—´:%5.2få¹³å‡ç­‰å¾…æ—¶é—´:%5.2få¹³å‡å¸¦æƒå‘¨è½¬æ—¶é—´%5.2f\n",avg_cycle_time, avg_waited_time, avg_w_cycle_time);
+    printf("Æ½¾ùÖÜ×ªÊ±¼ä:%5.2fÆ½¾ùµÈ´ýÊ±¼ä:%5.2fÆ½¾ù´øÈ¨ÖÜ×ªÊ±¼ä%5.2f\n",avg_cycle_time, avg_waited_time, avg_w_cycle_time);
 
 }
 
 void fcfs_jobs() 
 {
-    // å…ˆæ¥å…ˆæœåŠ¡ç®—æ³•
-    int system_time = 0;        // ç³»ç»Ÿå½“å‰æ—¶é—´
-    Job * running_job = NULL;   // å½“å‰æ­£åœ¨ä½¿ç”¨å¤„ç†æœºçš„ä½œä¸š
-    // å½“åŽå¤‡ä½œä¸šé˜Ÿåˆ—ä¸ä¸ºç©ºæ—¶
-    // æˆ–å°±ç»ªé˜Ÿåˆ—ä¸ä¸ºç©ºæ—¶
-    // æˆ–å½“å‰æœ‰ä½œä¸šæ­£åœ¨ä½¿ç”¨å¤„ç†æœºæ—¶
-    // è¿›è¡Œä½œä¸šè°ƒåº¦
+    // ÏÈÀ´ÏÈ·þÎñËã·¨
+    int system_time = 0;        // ÏµÍ³µ±Ç°Ê±¼ä
+    Job * running_job = NULL;   // µ±Ç°ÕýÔÚÊ¹ÓÃ´¦Àí»úµÄ×÷Òµ
+    // µ±ºó±¸×÷Òµ¶ÓÁÐ²»Îª¿ÕÊ±
+    // »ò¾ÍÐ÷¶ÓÁÐ²»Îª¿ÕÊ±
+    // »òµ±Ç°ÓÐ×÷ÒµÕýÔÚÊ¹ÓÃ´¦Àí»úÊ±
+    // ½øÐÐ×÷Òµµ÷¶È
     while (!is_queue_empty(created_queue) || !is_queue_empty(ready_queue) || running_job != NULL)
     {
-        // åˆ¤æ–­å½“å‰ç³»ç»Ÿæ—¶é—´, å°†åŽå¤‡é˜Ÿåˆ—ä¸­åˆ°è¾¾ç³»ç»Ÿçš„ä½œä¸šé“¾å…¥å°±ç»ªé˜Ÿåˆ—
+        // ÅÐ¶Ïµ±Ç°ÏµÍ³Ê±¼ä, ½«ºó±¸¶ÓÁÐÖÐµ½´ïÏµÍ³µÄ×÷ÒµÁ´Èë¾ÍÐ÷¶ÓÁÐ
         while (!is_queue_empty(created_queue))
         {
             Job * front_job = peek_queue(created_queue);
             if (front_job->arrive_time > system_time)
             {
-                // å¦‚æžœé˜Ÿå¤´çš„åˆ°è¾¾ç³»ç»Ÿæ—¶é—´æ¯”å½“å‰ç³»ç»Ÿæ—¶é—´æ™šåˆ™é€€å‡ºå¾ªçŽ¯
+                // Èç¹û¶ÓÍ·µÄµ½´ïÏµÍ³Ê±¼ä±Èµ±Ç°ÏµÍ³Ê±¼äÍíÔòÍË³öÑ­»·
                 break;
             }
             else
             {
-                // æŠŠåŽå¤‡é˜Ÿåˆ—çš„é˜Ÿå¤´å‡ºé˜Ÿ, ç„¶åŽå°†è¯¥ä½œä¸šå…¥å°±ç»ªé˜Ÿåˆ—
+                // °Ñºó±¸¶ÓÁÐµÄ¶ÓÍ·³ö¶Ó, È»ºó½«¸Ã×÷ÒµÈë¾ÍÐ÷¶ÓÁÐ
                 en_queue_node(ready_queue, de_queue(created_queue));
             }
         }
 
-        // åˆ¤æ–­å½“å‰æ˜¯å¦æœ‰ä½œä¸šæ­£åœ¨ä½¿ç”¨å¤„ç†æœº
+        // ÅÐ¶Ïµ±Ç°ÊÇ·ñÓÐ×÷ÒµÕýÔÚÊ¹ÓÃ´¦Àí»ú
         if (running_job == NULL)
         {
-            // æ— ä½œä¸šæ­£åœ¨ä½¿ç”¨å¤„ç†æœº
-            // å½“å‰å°±ç»ªé˜Ÿåˆ—ä¸ä¸ºç©ºæ—¶, åˆ™å°†å°±ç»ªé˜Ÿåˆ—å‡ºé˜Ÿä¸€ä¸ªä½œä¸šåŽ»ä½¿ç”¨å¤„ç†æœº
+            // ÎÞ×÷ÒµÕýÔÚÊ¹ÓÃ´¦Àí»ú
+            // µ±Ç°¾ÍÐ÷¶ÓÁÐ²»Îª¿ÕÊ±, Ôò½«¾ÍÐ÷¶ÓÁÐ³ö¶ÓÒ»¸ö×÷ÒµÈ¥Ê¹ÓÃ´¦Àí»ú
             if (!is_queue_empty(ready_queue))
                 running_job = de_queue(ready_queue);
             else
             {
-                // å°±ç»ªé˜Ÿåˆ—ä¸ºç©ºæ—¶, ç³»ç»Ÿæ—¶é—´æ­¥è¿›ä¸€ä¸ªæ—¶é—´å•ä½, é€€å‡ºè¯¥å±‚è°ƒåº¦çš„å¾ªçŽ¯
-                printf("ç³»ç»Ÿ%dæ—¶åˆ», å°±ç»ªé˜Ÿåˆ—ä¸ºç©º, å¤„ç†æœºç©ºé—²\n", system_time);
-                // ç³»ç»Ÿå‘å‰æŽ¨è¿›ä¸€ä¸ªæ—¶é—´å•ä½
+                // ¾ÍÐ÷¶ÓÁÐÎª¿ÕÊ±, ÏµÍ³Ê±¼ä²½½øÒ»¸öÊ±¼äµ¥Î», ÍË³ö¸Ã²ãµ÷¶ÈµÄÑ­»·
+                printf("ÏµÍ³%dÊ±¿Ì, ¾ÍÐ÷¶ÓÁÐÎª¿Õ, ´¦Àí»ú¿ÕÏÐ\n", system_time);
+                // ÏµÍ³ÏòÇ°ÍÆ½øÒ»¸öÊ±¼äµ¥Î»
                 ++system_time;
                 continue;
             }
         }
-        // å½“å‰æœ‰ä¸€ä¸ªä½œä¸šæ­£åœ¨ä½¿ç”¨å¤„ç†æœº
+        // µ±Ç°ÓÐÒ»¸ö×÷ÒµÕýÔÚÊ¹ÓÃ´¦Àí»ú
         else
         {
-            // å¦‚æžœå½“å‰æœ‰ä½œä¸šæ­£åœ¨ä½¿ç”¨å¤„ç†æœº
-            // åˆ¤æ–­å…¶ä½¿ç”¨å¤„ç†æœºçš„æ—¶é—´å·²ç»æ»¡è¶³å…¶è¦æ±‚æœåŠ¡æ—¶é—´
+            // Èç¹ûµ±Ç°ÓÐ×÷ÒµÕýÔÚÊ¹ÓÃ´¦Àí»ú
+            // ÅÐ¶ÏÆäÊ¹ÓÃ´¦Àí»úµÄÊ±¼äÒÑ¾­Âú×ãÆäÒªÇó·þÎñÊ±¼ä
             if (running_job->used_time == running_job->require_time)
             {
-                // è¯¥ä½œä¸šè¦æ±‚æœåŠ¡æ—¶é—´å·²æ»¡è¶³
-                // è®°å½•è¯¥ä½œä¸šå®Œæˆæ—¶é—´
+                // ¸Ã×÷ÒµÒªÇó·þÎñÊ±¼äÒÑÂú×ã
+                // ¼ÇÂ¼¸Ã×÷ÒµÍê³ÉÊ±¼ä
                 running_job->ended_time = system_time;
-                // è®¡ç®—å…¶å„ç§æ—¶é—´(å‘¨è½¬æ—¶é—´ã€ç­‰å¾…æ—¶é—´ã€å¸¦æƒå‘¨è½¬æ—¶é—´)
+                // ¼ÆËãÆä¸÷ÖÖÊ±¼ä(ÖÜ×ªÊ±¼ä¡¢µÈ´ýÊ±¼ä¡¢´øÈ¨ÖÜ×ªÊ±¼ä)
                 record_job_time(running_job);
-                // å°†è¯¥ä½œä¸šé“¾å…¥å®Œæˆé˜Ÿåˆ—
+                // ½«¸Ã×÷ÒµÁ´ÈëÍê³É¶ÓÁÐ
                 en_queue_node(ended_queue, running_job);
-                printf("ä½œä¸š: %cå·²å®Œæˆ, å¼€å§‹æ—¶é—´: %d å®Œæˆæ—¶é—´: %d\n", 
+                printf("×÷Òµ: %cÒÑÍê³É, ¿ªÊ¼Ê±¼ä: %d Íê³ÉÊ±¼ä: %d\n", 
                                 running_job->job_pid, running_job->ended_time - running_job->require_time, running_job->ended_time);
-                // è°ƒåº¦æ–°çš„ä½œä¸šä½¿ç”¨å¤„ç†æœº
+                // µ÷¶ÈÐÂµÄ×÷ÒµÊ¹ÓÃ´¦Àí»ú
                 if (!is_queue_empty(ready_queue))
                     running_job = de_queue(ready_queue);
                 else
@@ -259,13 +261,13 @@ void fcfs_jobs()
             }
         }
         
-        // ç³»ç»Ÿæ—¶é—´æ­¥è¿›
+        // ÏµÍ³Ê±¼ä²½½ø
         system_time++;
-        // æ­£åœ¨è¿è¡Œçš„ä½œä¸šçš„ä½¿ç”¨å¤„ç†æœºæ—¶é—´ +1
+        // ÕýÔÚÔËÐÐµÄ×÷ÒµµÄÊ¹ÓÃ´¦Àí»úÊ±¼ä +1
         if (running_job != NULL)
             running_job->used_time++;
     }
-    printf("FCFSç®—æ³•çš„è°ƒåº¦ä¿¡æ¯:\n");
+    printf("FCFSËã·¨µÄµ÷¶ÈÐÅÏ¢:\n");
     printf("--------------------\n");
     print_average_value();
     printf("--------------------\n");
@@ -273,60 +275,60 @@ void fcfs_jobs()
 }
 
 void sjf_jobs()
-{   // çŸ­ä½œä¸šä¼˜å…ˆç®—æ³•
-    int system_time = 0;        // ç³»ç»Ÿå½“å‰æ—¶é—´
-    Job * running_job = NULL;   // å½“å‰æ­£åœ¨ä½¿ç”¨å¤„ç†æœºçš„ä½œä¸š
-    /* å½“åŽå¤‡ä½œä¸šé˜Ÿåˆ—ä¸ä¸ºç©ºæ—¶ */
-    /* æˆ–å°±ç»ªé˜Ÿåˆ—ä¸ä¸ºç©ºæ—¶ */
-    /* æˆ–å½“å‰æœ‰ä½œä¸šæ­£åœ¨ä½¿ç”¨å¤„ç†æœºæ—¶ */
-    /* è¿›è¡Œä½œä¸šè°ƒåº¦ */
+{   // ¶Ì×÷ÒµÓÅÏÈËã·¨
+    int system_time = 0;        // ÏµÍ³µ±Ç°Ê±¼ä
+    Job * running_job = NULL;   // µ±Ç°ÕýÔÚÊ¹ÓÃ´¦Àí»úµÄ×÷Òµ
+    /* µ±ºó±¸×÷Òµ¶ÓÁÐ²»Îª¿ÕÊ± */
+    /* »ò¾ÍÐ÷¶ÓÁÐ²»Îª¿ÕÊ± */
+    /* »òµ±Ç°ÓÐ×÷ÒµÕýÔÚÊ¹ÓÃ´¦Àí»úÊ± */
+    /* ½øÐÐ×÷Òµµ÷¶È */
     while (!is_queue_empty(created_queue) || !is_queue_empty(ready_queue) || running_job != NULL)
     {
-        // åˆ¤æ–­å½“å‰ç³»ç»Ÿæ—¶é—´, å°†åŽå¤‡é˜Ÿåˆ—ä¸­åˆ°è¾¾ç³»ç»Ÿçš„ä½œä¸šé“¾å…¥å°±ç»ªé˜Ÿåˆ—
+        // ÅÐ¶Ïµ±Ç°ÏµÍ³Ê±¼ä, ½«ºó±¸¶ÓÁÐÖÐµ½´ïÏµÍ³µÄ×÷ÒµÁ´Èë¾ÍÐ÷¶ÓÁÐ
         while (!is_queue_empty(created_queue))
-        {   // å½“åŽå¤‡é˜Ÿåˆ—ä¸ä¸ºç©ºæ—¶
+        {   // µ±ºó±¸¶ÓÁÐ²»Îª¿ÕÊ±
             Job * front_job = peek_queue(created_queue);
             if (front_job->arrive_time > system_time)
-            {    // å¦‚æžœé˜Ÿå¤´çš„åˆ°è¾¾ç³»ç»Ÿæ—¶é—´æ¯”å½“å‰ç³»ç»Ÿæ—¶é—´æ™šåˆ™é€€å‡ºå¾ªçŽ¯
+            {    // Èç¹û¶ÓÍ·µÄµ½´ïÏµÍ³Ê±¼ä±Èµ±Ç°ÏµÍ³Ê±¼äÍíÔòÍË³öÑ­»·
                 break;
             }
             else
-            {    // æŠŠåŽå¤‡é˜Ÿåˆ—çš„é˜Ÿå¤´å‡ºé˜Ÿ, ç„¶åŽå°†è¯¥ä½œä¸šå…¥å°±ç»ªé˜Ÿåˆ—            
+            {    // °Ñºó±¸¶ÓÁÐµÄ¶ÓÍ·³ö¶Ó, È»ºó½«¸Ã×÷ÒµÈë¾ÍÐ÷¶ÓÁÐ            
                 en_queue_node(ready_queue, de_queue(created_queue));
             }
         }
 
-        // åˆ¤æ–­å½“å‰æ˜¯å¦æœ‰ä½œä¸šæ­£åœ¨ä½¿ç”¨å¤„ç†æœº
+        // ÅÐ¶Ïµ±Ç°ÊÇ·ñÓÐ×÷ÒµÕýÔÚÊ¹ÓÃ´¦Àí»ú
         if (running_job == NULL)
         {
-            // æ— ä½œä¸šæ­£åœ¨ä½¿ç”¨å¤„ç†æœº
-            // å½“å‰å°±ç»ªé˜Ÿåˆ—ä¸ä¸ºç©ºæ—¶, åˆ™å°†å°±ç»ªé˜Ÿåˆ—å‡ºé˜Ÿä¸€ä¸ªæ‰€éœ€æ—¶é—´æœ€çŸ­çš„ä½œä¸šåŽ»ä½¿ç”¨å¤„ç†æœº
+            // ÎÞ×÷ÒµÕýÔÚÊ¹ÓÃ´¦Àí»ú
+            // µ±Ç°¾ÍÐ÷¶ÓÁÐ²»Îª¿ÕÊ±, Ôò½«¾ÍÐ÷¶ÓÁÐ³ö¶ÓÒ»¸öËùÐèÊ±¼ä×î¶ÌµÄ×÷ÒµÈ¥Ê¹ÓÃ´¦Àí»ú
             if (!is_queue_empty(ready_queue))
                 running_job = get_shortest_job(ready_queue);
             else
             {
-                // å°±ç»ªé˜Ÿåˆ—ä¸ºç©ºæ—¶, ç³»ç»Ÿæ—¶é—´æ­¥è¿›ä¸€ä¸ªæ—¶é—´å•ä½, é€€å‡ºè¯¥å±‚è°ƒåº¦çš„å¾ªçŽ¯
-                printf("ç³»ç»Ÿ%dæ—¶åˆ», å°±ç»ªé˜Ÿåˆ—ä¸ºç©º, å¤„ç†æœºç©ºé—²\n", system_time);
-                // ç³»ç»Ÿå‘å‰æŽ¨è¿›ä¸€ä¸ªæ—¶é—´å•ä½
+                // ¾ÍÐ÷¶ÓÁÐÎª¿ÕÊ±, ÏµÍ³Ê±¼ä²½½øÒ»¸öÊ±¼äµ¥Î», ÍË³ö¸Ã²ãµ÷¶ÈµÄÑ­»·
+                printf("ÏµÍ³%dÊ±¿Ì, ¾ÍÐ÷¶ÓÁÐÎª¿Õ, ´¦Àí»ú¿ÕÏÐ\n", system_time);
+                // ÏµÍ³ÏòÇ°ÍÆ½øÒ»¸öÊ±¼äµ¥Î»
                 ++system_time;
                 continue;
             }
         }
         else
-        {   // å½“å‰æœ‰ä¸€ä¸ªä½œä¸šæ­£åœ¨ä½¿ç”¨å¤„ç†æœº
-            // åˆ™åˆ¤æ–­å…¶ä½¿ç”¨å¤„ç†æœºçš„æ—¶é—´å·²ç»æ»¡è¶³å…¶è¦æ±‚æœåŠ¡æ—¶é—´
+        {   // µ±Ç°ÓÐÒ»¸ö×÷ÒµÕýÔÚÊ¹ÓÃ´¦Àí»ú
+            // ÔòÅÐ¶ÏÆäÊ¹ÓÃ´¦Àí»úµÄÊ±¼äÒÑ¾­Âú×ãÆäÒªÇó·þÎñÊ±¼ä
             if (running_job->used_time == running_job->require_time)
             {
-                // è¯¥ä½œä¸šè¦æ±‚æœåŠ¡æ—¶é—´å·²æ»¡è¶³
-                // è®°å½•è¯¥ä½œä¸šå®Œæˆæ—¶é—´
+                // ¸Ã×÷ÒµÒªÇó·þÎñÊ±¼äÒÑÂú×ã
+                // ¼ÇÂ¼¸Ã×÷ÒµÍê³ÉÊ±¼ä
                 running_job->ended_time = system_time;
-                // è®¡ç®—å…¶å„ç§æ—¶é—´(å‘¨è½¬æ—¶é—´ã€ç­‰å¾…æ—¶é—´ã€å¸¦æƒå‘¨è½¬æ—¶é—´)
+                // ¼ÆËãÆä¸÷ÖÖÊ±¼ä(ÖÜ×ªÊ±¼ä¡¢µÈ´ýÊ±¼ä¡¢´øÈ¨ÖÜ×ªÊ±¼ä)
                 record_job_time(running_job);
-                // å°†è¯¥ä½œä¸šé“¾å…¥å®Œæˆé˜Ÿåˆ—
+                // ½«¸Ã×÷ÒµÁ´ÈëÍê³É¶ÓÁÐ
                 en_queue_node(ended_queue, running_job);
-                printf("ä½œä¸š: %cå·²å®Œæˆ, å¼€å§‹æ—¶é—´: %d å®Œæˆæ—¶é—´: %d\n", 
+                printf("×÷Òµ: %cÒÑÍê³É, ¿ªÊ¼Ê±¼ä: %d Íê³ÉÊ±¼ä: %d\n", 
                                 running_job->job_pid, running_job->ended_time - running_job->require_time, running_job->ended_time);
-                // è°ƒåº¦æ–°çš„ä½œä¸šä½¿ç”¨å¤„ç†æœº
+                // µ÷¶ÈÐÂµÄ×÷ÒµÊ¹ÓÃ´¦Àí»ú
                 if (!is_queue_empty(ready_queue))
                     running_job = get_shortest_job(ready_queue);
                 else
@@ -334,13 +336,13 @@ void sjf_jobs()
             }
         }
         
-        // ç³»ç»Ÿæ—¶é—´æ­¥è¿›
+        // ÏµÍ³Ê±¼ä²½½ø
         system_time++;
-        // æ­£åœ¨è¿è¡Œçš„ä½œä¸šçš„ä½¿ç”¨å¤„ç†æœºæ—¶é—´ +1
+        // ÕýÔÚÔËÐÐµÄ×÷ÒµµÄÊ¹ÓÃ´¦Àí»úÊ±¼ä +1
         if (running_job != NULL)
             running_job->used_time++;
     }
-    printf("SJFç®—æ³•çš„è°ƒåº¦ä¿¡æ¯:\n");
+    printf("SJFËã·¨µÄµ÷¶ÈÐÅÏ¢:\n");
     printf("--------------------\n");
     print_average_value();
     printf("--------------------\n");
@@ -349,51 +351,120 @@ void sjf_jobs()
 }
 
 void rr_jobs(int q)
-{   // æ—¶é—´ç‰‡è½®è½¬RRç®—æ³•, ä¼ å…¥æ—¶é—´ç‰‡å‚æ•°q
+{   // Ê±¼äÆ¬ÂÖ×ªRRËã·¨, ´«ÈëÊ±¼äÆ¬²ÎÊýq
 
 }
 
-void hrrn() 
-{   // æœ€é«˜å“åº”æ¯”ä¼˜å…ˆç®—æ³• HRRN(éžæŠ¢å )
-    
+void hrrn_jobs() 
+{   // ×î¸ßÏìÓ¦±ÈÓÅÏÈËã·¨ HRRN(·ÇÇÀÕ¼)
+    int system_time = 0;        // ÏµÍ³µ±Ç°Ê±¼ä
+    Job * running_job = NULL;   // µ±Ç°ÕýÔÚÊ¹ÓÃ´¦Àí»úµÄ×÷Òµ
+    /* µ±ºó±¸×÷Òµ¶ÓÁÐ²»Îª¿ÕÊ± */
+    /* »ò¾ÍÐ÷¶ÓÁÐ²»Îª¿ÕÊ± */
+    /* »òµ±Ç°ÓÐ×÷ÒµÕýÔÚÊ¹ÓÃ´¦Àí»úÊ± */
+    /* ½øÐÐ×÷Òµµ÷¶È */
+    while (!is_queue_empty(created_queue) || !is_queue_empty(ready_queue) || running_job != NULL)
+    {
+        // ÅÐ¶Ïµ±Ç°ÏµÍ³Ê±¼ä, ½«ºó±¸¶ÓÁÐÖÐµ½´ïÏµÍ³µÄ×÷ÒµÁ´Èë¾ÍÐ÷¶ÓÁÐ
+        while (!is_queue_empty(created_queue))
+        {   // µ±ºó±¸¶ÓÁÐ²»Îª¿ÕÊ±
+            Job * front_job = peek_queue(created_queue);
+            if (front_job->arrive_time > system_time)
+            {    // Èç¹û¶ÓÍ·µÄµ½´ïÏµÍ³Ê±¼ä±Èµ±Ç°ÏµÍ³Ê±¼äÍíÔòÍË³öÑ­»·
+                break;
+            }
+            else
+            {    // °Ñºó±¸¶ÓÁÐµÄ¶ÓÍ·³ö¶Ó, È»ºó½«¸Ã×÷ÒµÈë¾ÍÐ÷¶ÓÁÐ            
+                en_queue_node(ready_queue, de_queue(created_queue));
+            }
+        }
+
+        // ÅÐ¶Ïµ±Ç°ÊÇ·ñÓÐ×÷ÒµÕýÔÚÊ¹ÓÃ´¦Àí»ú
+        if (running_job == NULL)
+        {
+            // ÎÞ×÷ÒµÕýÔÚÊ¹ÓÃ´¦Àí»ú
+            // µ±Ç°¾ÍÐ÷¶ÓÁÐ²»Îª¿ÕÊ±, Ôò½«¾ÍÐ÷¶ÓÁÐ³ö¶ÓÒ»¸öËùÐèÊ±¼ä×î¶ÌµÄ×÷ÒµÈ¥Ê¹ÓÃ´¦Àí»ú
+            if (!is_queue_empty(ready_queue))
+                running_job = get_high_response_job(ready_queue);
+            else
+            {
+                // ¾ÍÐ÷¶ÓÁÐÎª¿ÕÊ±, ÏµÍ³Ê±¼ä²½½øÒ»¸öÊ±¼äµ¥Î», ÍË³ö¸Ã²ãµ÷¶ÈµÄÑ­»·
+                printf("ÏµÍ³%dÊ±¿Ì, ¾ÍÐ÷¶ÓÁÐÎª¿Õ, ´¦Àí»ú¿ÕÏÐ\n", system_time);
+                // ÏµÍ³ÏòÇ°ÍÆ½øÒ»¸öÊ±¼äµ¥Î»
+                ++system_time;
+                continue;
+            }
+        }
+        else
+        {   // µ±Ç°ÓÐÒ»¸ö×÷ÒµÕýÔÚÊ¹ÓÃ´¦Àí»ú
+            // ÔòÅÐ¶ÏÆäÊ¹ÓÃ´¦Àí»úµÄÊ±¼äÒÑ¾­Âú×ãÆäÒªÇó·þÎñÊ±¼ä
+            if (running_job->used_time == running_job->require_time)
+            {
+                // ¸Ã×÷ÒµÒªÇó·þÎñÊ±¼äÒÑÂú×ã
+                // ¼ÇÂ¼¸Ã×÷ÒµÍê³ÉÊ±¼ä
+                running_job->ended_time = system_time;
+                // ¼ÆËãÆä¸÷ÖÖÊ±¼ä(ÖÜ×ªÊ±¼ä¡¢µÈ´ýÊ±¼ä¡¢´øÈ¨ÖÜ×ªÊ±¼ä)
+                record_job_time(running_job);
+                // ½«¸Ã×÷ÒµÁ´ÈëÍê³É¶ÓÁÐ
+                en_queue_node(ended_queue, running_job);
+                printf("×÷Òµ: %cÒÑÍê³É, ¿ªÊ¼Ê±¼ä: %d Íê³ÉÊ±¼ä: %d\n", 
+                                running_job->job_pid, running_job->ended_time - running_job->require_time, running_job->ended_time);
+                // µ÷¶ÈÐÂµÄ×÷ÒµÊ¹ÓÃ´¦Àí»ú
+                if (!is_queue_empty(ready_queue))
+                    running_job = get_high_response_job(ready_queue);
+                else
+                    running_job = NULL;
+            }
+        }
+        
+        // ÏµÍ³Ê±¼ä²½½ø
+        system_time++;
+        // ÕýÔÚÔËÐÐµÄ×÷ÒµµÄÊ¹ÓÃ´¦Àí»úÊ±¼ä +1
+        if (running_job != NULL)
+            running_job->used_time++;
+    }
+    printf("HHRNËã·¨µÄµ÷¶ÈÐÅÏ¢:\n");
+    printf("--------------------\n");
+    print_average_value();
+    printf("--------------------\n");    
 }
 
-// ä½œä¸šèŠ‚ç‚¹å…¥é˜Ÿ
+// ×÷Òµ½ÚµãÈë¶Ó
 void en_queue_node(linked_queue * queue, Job * en_queue_pcb_node)
 {
-    // å°†ä¼ å…¥çš„Jobä½œä¸šèŠ‚ç‚¹å…¥é˜Ÿ
+    // ½«´«ÈëµÄJob×÷Òµ½ÚµãÈë¶Ó
     if (is_queue_empty(queue))
     {
         queue->front = en_queue_pcb_node;
         queue->rear = en_queue_pcb_node;
-    } else {// é˜Ÿåˆ—éžç©º
+    } else {// ¶ÓÁÐ·Ç¿Õ
         queue->rear->next = en_queue_pcb_node;
         queue->rear = en_queue_pcb_node;
     }
 }
 
-// åˆ¤æ–­é˜Ÿåˆ—æ˜¯å¦éžç©º
+// ÅÐ¶Ï¶ÓÁÐÊÇ·ñ·Ç¿Õ
 int is_queue_empty(linked_queue * queue)
 {
     if ((queue->front == NULL) && (queue->rear == NULL)) return TRUE;
     else return FALSE;
 }
 
-// é˜Ÿåˆ—å‡ºé˜Ÿé˜Ÿå¤´å…ƒç´ 
+// ¶ÓÁÐ³ö¶Ó¶ÓÍ·ÔªËØ
 Job * de_queue(linked_queue * queue)
 {
     Job * return_job;
     if (is_queue_empty(queue))
     {
-        printf("é˜Ÿåˆ—ä¸ºç©º, æ— æ³•å‡ºé˜Ÿ\n");
+        printf("¶ÓÁÐÎª¿Õ, ÎÞ·¨³ö¶Ó\n");
         return NULL;
     }
     return_job = queue->front;
     if (queue->front == queue->rear)
-    {// åªæœ‰ä¸€ä¸ªèŠ‚ç‚¹
+    {// Ö»ÓÐÒ»¸ö½Úµã
         queue->front = queue->rear =NULL;
     } else {
-        // å¤šäºŽä¸€ä¸ªèŠ‚ç‚¹æ—¶
+        // ¶àÓÚÒ»¸ö½ÚµãÊ±
         queue->front = queue->front->next;
     }
     return_job->next = NULL;
@@ -401,7 +472,7 @@ Job * de_queue(linked_queue * queue)
     return return_job;
 }
 
-// è¿”å›žé˜Ÿå¤´ä½œä¸š, ä½†ä¸å‡ºé˜Ÿ
+// ·µ»Ø¶ÓÍ·×÷Òµ, µ«²»³ö¶Ó
 Job * peek_queue(linked_queue * queue) 
 {
     return queue->front;
@@ -415,6 +486,44 @@ Job * get_shortest_job(linked_queue *queue)
     for (p = queue->front; p != NULL; p = p->next)
     {
         if (shortest_job->require_time > p->require_time)
+        {
+            shortest_job = p;
+            pre = q;
+        }
+        q = p;
+    }
+    if (shortest_job == queue->front)
+    {
+        if (queue->front == queue->rear)
+        {
+            queue->rear = NULL;
+            queue->front = NULL;
+        } else {
+            queue->front = queue->front->next;
+            shortest_job->next = NULL;            
+        }
+    } else if (shortest_job == queue->rear)
+    {
+        queue->rear = pre;
+        pre->next = NULL;
+    } else
+    {
+        pre->next = shortest_job->next;
+        shortest_job->next = NULL;
+    }
+    return shortest_job;  
+}
+
+Job * get_high_response_job(linked_queue * queue)
+{
+    Job *p, *q, *shortest_job, *pre;
+    shortest_job = queue->front;
+    pre = queue->front;
+    for (p = queue->front; p != NULL; p = p->next)
+    {
+        float res1 = (float)(shortest_job->waited_time + shortest_job->require_time)/(float)(shortest_job->require_time);
+        float res2 = (float)(shortest_job->waited_time + shortest_job->require_time)/(float)(shortest_job->require_time);
+        if (res1 < res2)
         {
             shortest_job = p;
             pre = q;
