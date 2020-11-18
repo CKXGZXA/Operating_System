@@ -72,42 +72,41 @@ Job * get_shortest_job(linked_queue *queue);
 Job * get_high_response_job(linked_queue *queue, int system_time);
 
 /* 程序入口 */
-int main(int argc, char const *argv[])
+int main()
 {
     // 记录用户键盘输入的选择键
     char user_opt;
-    while (1)
+
+    // 初始化作业数组中每个作业
+    init_jobs();
+    // 初始化各个队列
+    init_queues();
+    // 打印菜单
+    print_menu();
+    scanf("%c", &user_opt);
+    getchar();
+    switch (user_opt)
     {
-        // 初始化作业数组中每个作业
-        init_jobs();
-        // 初始化各个队列
-        init_queues();
-        // 打印菜单
-        print_menu();
-        scanf("%c", &user_opt);
-        getchar();
-        switch (user_opt)
-        {
-        case '1':
-            fcfs_jobs();
-            break;
-        case '2':
-            sjf_jobs();
-            break;
-        case '3':
-            rr_jobs(1);
-            break;
-        case '4':
-            rr_jobs(4);
-            break;
-        case '5':
-            hrrn_jobs();
-            break;
-        case 'q':
-            exit(0);
-            break;
-        }
-    }    
+    case '1':
+        fcfs_jobs();
+        break;
+    case '2':
+        sjf_jobs();
+        break;
+    case '3':
+        rr_jobs(1);
+        break;
+    case '4':
+        rr_jobs(4);
+        break;
+    case '5':
+        hrrn_jobs();
+        break;
+    case 'q':
+        exit(0);
+        break;
+    }
+    
     return 0;
 }
 
@@ -193,6 +192,25 @@ void print_average_value()
 
 }
 
+void add_new_job(linked_queue * created_queue, int system_time)
+{
+    // 判断当前系统时间, 将后备队列中到达系统的作业链入就绪队列
+    while (!is_queue_empty(created_queue))
+    {
+        Job * front_job = peek_queue(created_queue);
+        if (front_job->arrive_time > system_time)
+        {
+            // 如果队头的到达系统时间比当前系统时间晚则退出循环
+            break;
+        }
+        else
+        {
+            // 把后备队列的队头出队, 然后将该作业入就绪队列
+            en_queue_node(ready_queue, de_queue(created_queue));
+        }
+    }    
+}
+
 void fcfs_jobs() 
 {
     // 先来先服务算法
@@ -205,20 +223,7 @@ void fcfs_jobs()
     while (!is_queue_empty(created_queue) || !is_queue_empty(ready_queue) || running_job != NULL)
     {
         // 判断当前系统时间, 将后备队列中到达系统的作业链入就绪队列
-        while (!is_queue_empty(created_queue))
-        {
-            Job * front_job = peek_queue(created_queue);
-            if (front_job->arrive_time > system_time)
-            {
-                // 如果队头的到达系统时间比当前系统时间晚则退出循环
-                break;
-            }
-            else
-            {
-                // 把后备队列的队头出队, 然后将该作业入就绪队列
-                en_queue_node(ready_queue, de_queue(created_queue));
-            }
-        }
+        add_new_job(created_queue, system_time);
 
         // 判断当前是否有作业正在使用处理机
         if (running_job == NULL)
@@ -284,18 +289,7 @@ void sjf_jobs()
     while (!is_queue_empty(created_queue) || !is_queue_empty(ready_queue) || running_job != NULL)
     {
         // 判断当前系统时间, 将后备队列中到达系统的作业链入就绪队列
-        while (!is_queue_empty(created_queue))
-        {   // 当后备队列不为空时
-            Job * front_job = peek_queue(created_queue);
-            if (front_job->arrive_time > system_time)
-            {    // 如果队头的到达系统时间比当前系统时间晚则退出循环
-                break;
-            }
-            else
-            {    // 把后备队列的队头出队, 然后将该作业入就绪队列            
-                en_queue_node(ready_queue, de_queue(created_queue));
-            }
-        }
+        add_new_job(created_queue, system_time);
 
         // 判断当前是否有作业正在使用处理机
         if (running_job == NULL)
@@ -353,10 +347,64 @@ void rr_jobs(int q)
 {   // 时间片轮转RR算法, 传入时间片参数q
     int system_time = 0;        // 系统当前时间
     Job * running_job = NULL;          // 当前正在使用处理机的作业
-
+    add_new_job(created_queue, system_time);
     while (!is_queue_empty(created_queue) || !is_queue_empty(ready_queue) || running_job != NULL)
     {
-        
+        int i, flag = TRUE;
+        for (i = 0; i < q&&flag; ++i)
+        {
+            // 判断处理机有无被使用
+            if (running_job == NULL)
+            {
+                // 当前就绪队列不为空时, 则从就绪队列出队一个作业去使用处理机
+                if (!is_queue_empty(ready_queue))
+                    running_job = de_queue(ready_queue);
+                else
+                {
+                    // 就绪队列为空时, 系统时间步进一个时间单位, 退出该层调度的循环
+                    printf("系统%d时刻, 就绪队列为空, 处理机空闲\n", system_time);
+                    // 系统向前推进一个时间单位
+                    ++system_time;
+                    flag = FALSE;
+                }                
+            }        
+        }
+        if (running_job->used_time < running_job->require_time)
+        {
+            // 系统时间步进
+            system_time+=q;
+            // 正在运行的作业的使用处理机时间 +1
+            if (running_job != NULL)
+                running_job->used_time+=q;
+
+            if (running_job->used_time == running_job->require_time)
+            {
+                // 该作业要求服务时间已满足
+                // 记录该作业完成时间
+                running_job->ended_time = system_time;
+                // 计算其各种时间(周转时间、等待时间、带权周转时间)
+                record_job_time(running_job);
+                // 将该作业链入完成队列
+                en_queue_node(ended_queue, running_job);
+                printf("作业: %c已完成, 开始时间: %d 完成时间: %d\n", 
+                                running_job->job_pid, running_job->ended_time - running_job->require_time, running_job->ended_time);
+                // 调度新的作业使用处理机
+                if (!is_queue_empty(ready_queue)) {
+                    running_job = de_queue(ready_queue);
+                    break;
+                }
+                else
+                    running_job = NULL;
+            }                
+
+            
+            // 判断当前系统时间, 将后备队列中到达系统的作业链入就绪队列
+            add_new_job(created_queue, system_time);    
+            // 将未完成的作业重新入就绪队列
+            en_queue_node(ready_queue, running_job);
+            // 再从就绪队列中出队一个作业使用处理机
+            running_job = de_queue(ready_queue);
+        }
     }
 
     printf("RR算法(时间片为%d)的调度信息:\n",q);
@@ -376,18 +424,7 @@ void hrrn_jobs()
     while (!is_queue_empty(created_queue) || !is_queue_empty(ready_queue) || running_job != NULL)
     {
         // 判断当前系统时间, 将后备队列中到达系统的作业链入就绪队列
-        while (!is_queue_empty(created_queue))
-        {   // 当后备队列不为空时
-            Job * front_job = peek_queue(created_queue);
-            if (front_job->arrive_time > system_time)
-            {    // 如果队头的到达系统时间比当前系统时间晚则退出循环
-                break;
-            }
-            else
-            {    // 把后备队列的队头出队, 然后将该作业入就绪队列            
-                en_queue_node(ready_queue, de_queue(created_queue));
-            }
-        }
+        add_new_job(created_queue, system_time);
 
         // 判断当前是否有作业正在使用处理机
         if (running_job == NULL)
