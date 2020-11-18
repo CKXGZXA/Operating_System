@@ -7,7 +7,7 @@
 #include <malloc.h>
 #define TRUE 1
 #define FALSE 0
-#define LEN 5           // 作业数组大小
+#define LEN 5            // 作业数组大小
 
 
 typedef  struct  Job { 
