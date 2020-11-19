@@ -400,7 +400,7 @@ void rr_jobs(int q)
                     // 将此队列链入完成队列
     				en_queue_node(ended_queue, running_job);
                     // 输出进程调度信息
-                printf("作业号:%3c 到达时间:%3d 响应时间:%3d 完成时间:%3d 周转时间:%3d 带权周转时间:.2f\n", 
+                printf("作业号:%3c 到达时间:%3d 响应时间:%3d 完成时间:%3d 周转时间:%3d 带权周转时间:%.2f\n", 
                                 running_job->job_pid, running_job->arrive_time,
                                 running_job->servied_time, running_job->ended_time,
                                 running_job->cycle_time, running_job->w_cycle_time);
