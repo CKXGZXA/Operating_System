@@ -347,36 +347,47 @@ void rr_jobs(int q)
 {   // 时间片轮转RR算法, 传入时间片参数q
     int system_time = 0;        // 系统当前时间
     Job * running_job = NULL;          // 当前正在使用处理机的作业
-    while(!is_queue_empty(created_queue) && is_queue_empty(ready_queue))
-    {
-    	add_new_job(ready_queue, system_time);
-    	system_time++;	
-    }
-    running_job = de_queue(ready_queue);
     while (!is_queue_empty(created_queue) || !is_queue_empty(ready_queue) || running_job != NULL)
     {
-    	int flag = 1;
-    	int used_time_slice = 0;
-    	while(flag)
+    
+    	add_new_job(created_queue,system_time);
+ 	   if(running_job != NULL)
     	{
-    		used_time_slice++;
-    		system_time++;
-    		running_job->used_time++;
-    		if(running_job->used_time == running_job->require_time)
+    		en_queue_node(ready_queue, running_job);
+    		running_job == NULL;	
+    	}
+    	int used_time_slice = 0, flag = TRUE;
+    	while(flag) 
+    	{
+    		if(running_job == NULL)
     		{
-    			running_job->ended_time = system_time;
-    			record_job_time(running_job);
-    			en_queue_node(ended_queue, running_job);
-    			printf("%c finished, arrival:%d, ended_time: %d",running_job->job_pid,running_job->arrive_time,running_job->ended_time);
-    			flag = 0;	
-    		} else if (used_time_slice == q)
+    			if(!is_queue_empty(ready_queue))
+    				running_job = de_queue(ready_queue);
+    			else
+    			{
+    				printf("%d time, CPU is free", system_time);
+    				++system_time;
+    				break;	
+    			}	
+    		}
+    		else
     		{
-    			add_new_job(ready_queue, system_time);
-    			en_queue_node(ready_queue, running_job);
-    			flag = 0;	
+    			used_time_slice++;
+    			system_time++;
+    			running_job->used_time++;
+    			if(running_job->used_time == running_job->require_time)
+    			{
+    				running_job->ended_time = system_time;
+    				record_job_time(running_job);
+    				en_queue_node(ended_queue, running_job);
+    				printf("%c finished, arrival time: %d, finished time: %d", running_job->job_pid, running_job->arrive_time, running_job->ended_time);
+    				flag = 0;
+    			} else if(used_time_slice == q)
+    			{
+    				flag = 0;
+    			}	
     		}	
     	}
-    	running_job = de_queue(ready_queue);
     }
 
     printf("RR算法(时间片为%d)的调度信息:\n",q);
