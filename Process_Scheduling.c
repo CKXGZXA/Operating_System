@@ -1,87 +1,89 @@
-// 模拟实现进程调度的经典算法，包括FCFS、SJF（SPF）、HRRN和RR(时间片大小分别为1和4)。
-// 输出调度过程，并计算不同调度算法的周转时间、平均周转时间、带权周转时间、平均带权周转时间、
-// 等待时间、平均等待时间等信息。
+// ģ��ʵ�ֽ��̵��ȵľ����㷨������FCFS��SJF��SPF����HRRN��RR(ʱ��Ƭ��С�ֱ�Ϊ1��4)��
+// ������ȹ��̣������㲻ͬ�����㷨����תʱ�䡢ƽ����תʱ�䡢��Ȩ��תʱ�䡢ƽ����Ȩ��תʱ�䡢
+// �ȴ�ʱ�䡢ƽ���ȴ�ʱ�����Ϣ��
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
 #define TRUE 1
 #define FALSE 0
-#define LEN 5           // 作业数组大小
+#define LEN 5           // ��ҵ�����С
 
 
 typedef  struct  Job { 
-    char job_pid; 		// 任务号
-    int arrive_time;	// 到达时间
-    int require_time;	// 要求服务时间
-    int used_time;      // 已用时间
-    int ended_time;		// 完成时间
-    int cycle_time;	    // 周转时间
-    int waited_time;	// 等待时间
-    float w_cycle_time;	// 带权等待时间
+    char job_pid; 		// �����
+    int arrive_time;	// ����ʱ��
+    int require_time;	// Ҫ�����ʱ��
+    int used_time;      // ����ʱ��
+    int ended_time;		// ���ʱ��
+    int cycle_time;	    // ��תʱ��
+    int waited_time;	// �ȴ�ʱ��
+    float w_cycle_time;	// ��Ȩ�ȴ�ʱ��
+    int has_serviced;   // ����RR�㷨�б�ǿ�ʼ����ϵͳʱ��
+    int servied_time;   // ��¼RR�㷨�п�ʼ�����ʱ��
     struct Job  *next;
 } Job; 
 
-/*作业队列的结构体*/
+/*��ҵ���еĽṹ��*/
 typedef struct linked_queue
 {
-    Job * front ;        //队头指向结点的指针
-    Job * rear;          //队尾指向结点的指针
-    int count;           //队列当前长度
+    Job * front ;        //��ͷָ�����ָ��
+    Job * rear;          //��βָ�����ָ��
+    int count;           //���е�ǰ����
 }linked_queue;
 
-// 作业数组全局变量
+// ��ҵ����ȫ�ֱ���
 struct Job job_array[LEN];
 
-// 后备队列
+// �󱸶���
 linked_queue * created_queue;
-// 就绪队列
+// ��������
 linked_queue * ready_queue;
-// 完成队列
+// ��ɶ���
 linked_queue * ended_queue;
 
-// 初始化作业数组的每个作业信息
+// ��ʼ����ҵ�����ÿ����ҵ��Ϣ
 void init_jobs();
-// 初始化各个队列
+// ��ʼ����������
 void init_queues();
-// 打印菜单
+// ��ӡ�˵�
 void print_menu();
-// 先来先服务调度算法 (FCFS)
+// �����ȷ�������㷨 (FCFS)
 void fcfs_jobs();
-// 短作业优先调度算法 (SJF)
+// ����ҵ���ȵ����㷨 (SJF)
 void sjf_jobs();
-// 轮转法(RR)
+// ��ת��(RR)
 void rr_jobs(int q);
-// 最高响应比调度算法 (HRRN)
+// �����Ӧ�ȵ����㷨 (HRRN)
 void hrrn_jobs();
 
-// 打印输出所有作业的各种时间平均值
+// ��ӡ���������ҵ�ĸ���ʱ��ƽ��ֵ
 void print_average_value();
 int is_queue_empty(linked_queue * queue);
-// 作业出队列函数
+// ��ҵ�����к���
 Job * de_queue(linked_queue * queue);
-// 返回队头作业(不出队)
+// ���ض�ͷ��ҵ(������)
 Job * peek_queue(linked_queue * queue);
-// 计算该作业的各种时间
+// �������ҵ�ĸ���ʱ��
 void record_job_time(Job * record_job);
-// 作业节点入队
+// ��ҵ�ڵ����
 void en_queue_node(linked_queue * queue, Job * en_queue_pcb_node);
-// 得到需求时间最短的作业
+// �õ�����ʱ����̵���ҵ
 Job * get_shortest_job(linked_queue *queue);
-// 得到最高响应比作业
+// �õ������Ӧ����ҵ
 Job * get_high_response_job(linked_queue *queue, int system_time);
 
-/* 程序入口 */
+/* ������� */
 int main()
 {
-    // 记录用户键盘输入的选择键
+    // ��¼�û����������ѡ���
     char user_opt;
 
-    // 初始化作业数组中每个作业
+    // ��ʼ����ҵ������ÿ����ҵ
     init_jobs();
-    // 初始化各个队列
+    // ��ʼ����������
     init_queues();
-    // 打印菜单
+    // ��ӡ�˵�
     print_menu();
     scanf("%c", &user_opt);
     getchar();
@@ -113,46 +115,46 @@ int main()
 void print_menu()
 {
     printf("\n======================\n");
-    printf("按1键FCFS\n");
-    printf("按2键SJF \n");
-    printf("按3键RR时间片轮转(q=1)\n");
-    printf("按4键RR时间片轮转(q=4)\n");
-    printf("按5键HRRN\n");
-    printf("按q键退出 \n");
-    printf("您的选择: ");
+    printf("��1��FCFS\n");
+    printf("��2��SJF \n");
+    printf("��3��RRʱ��Ƭ��ת(q=1)\n");
+    printf("��4��RRʱ��Ƭ��ת(q=4)\n");
+    printf("��5��HRRN\n");
+    printf("��q���˳� \n");
+    printf("����ѡ��: ");
     printf("\n======================\n");
 }
 
 void init_jobs() 
 {
-    // 根据题目要求初始化每个进程的信息
-    job_array[0].job_pid = 'A'; job_array[0].arrive_time = 0; job_array[0].require_time = 3;
-    job_array[1].job_pid = 'B'; job_array[1].arrive_time = 2; job_array[1].require_time = 6;
-    job_array[2].job_pid = 'C'; job_array[2].arrive_time = 4; job_array[2].require_time = 4;
-    job_array[3].job_pid = 'D'; job_array[3].arrive_time = 6; job_array[3].require_time = 5;
-    job_array[4].job_pid = 'E'; job_array[4].arrive_time = 8; job_array[4].require_time = 2;
+    // ������ĿҪ���ʼ��ÿ�����̵���Ϣ
+    job_array[0].job_pid = 'A'; job_array[0].arrive_time = 0; job_array[0].require_time = 3;job_array[0].has_serviced = FALSE;
+    job_array[1].job_pid = 'B'; job_array[1].arrive_time = 2; job_array[1].require_time = 6;job_array[1].has_serviced = FALSE;
+    job_array[2].job_pid = 'C'; job_array[2].arrive_time = 4; job_array[2].require_time = 4;job_array[2].has_serviced = FALSE;
+    job_array[3].job_pid = 'D'; job_array[3].arrive_time = 6; job_array[3].require_time = 5;job_array[3].has_serviced = FALSE;
+    job_array[4].job_pid = 'E'; job_array[4].arrive_time = 8; job_array[4].require_time = 2;job_array[4].has_serviced = FALSE;
 }
 
 void init_queues()
 {
-    // 释放原队列
+    // �ͷ�ԭ����
     free(created_queue);
     free(ready_queue);
     free(ended_queue);
-    // 后备队列 并初始化
+    // �󱸶��� ����ʼ��
     created_queue = (linked_queue *) malloc(sizeof(linked_queue));
     created_queue->front = created_queue->rear = NULL;
     created_queue->count = 0;
-    // 就绪队列 并初始化
+    // �������� ����ʼ��
     ready_queue = (linked_queue *) malloc(sizeof(linked_queue));
     ready_queue->front = ready_queue->rear = NULL;
     ready_queue->count = 0;
-    // 完成队列 并初始化
+    // ��ɶ��� ����ʼ��
     ended_queue = (linked_queue *) malloc(sizeof(linked_queue));
     ended_queue->front = ended_queue->rear = NULL;
     ended_queue->count = 0;
 
-    // 将作业数组中所有作业放入后备队列
+    // ����ҵ������������ҵ����󱸶���
     int i;
     for ( i = 0; i < LEN; i++)
         en_queue_node(created_queue, &job_array[i]);
@@ -161,7 +163,7 @@ void init_queues()
 
 void record_job_time(Job * record_job)
 {
-    // 计算该作业的各种时间
+    // �������ҵ�ĸ���ʱ��
     record_job->cycle_time = record_job->ended_time - record_job->arrive_time;
     record_job->waited_time = record_job->cycle_time - record_job->require_time;
     record_job->w_cycle_time = (float) record_job->cycle_time / (float) record_job->require_time;
@@ -169,13 +171,13 @@ void record_job_time(Job * record_job)
 
 void print_average_value()
 {
-    // 平均周转时间
+    // ƽ����תʱ��
     float avg_cycle_time = 0;
-    // 平均等待时间
+    // ƽ���ȴ�ʱ��
     float avg_waited_time = 0;
-    // 平均带权周转时间
+    // ƽ����Ȩ��תʱ��
     float avg_w_cycle_time = 0;
-    // 遍历作业数组, 求和
+    // ������ҵ����, ���
     int i;
     for ( i = 0; i < LEN; i++)
     {
@@ -183,29 +185,29 @@ void print_average_value()
         avg_waited_time     += (float) job_array[i].waited_time;
         avg_w_cycle_time    += job_array[i].w_cycle_time;
     }
-    // 计算均值
+    // �����ֵ
     avg_cycle_time      /= (float) LEN;
     avg_waited_time     /= (float) LEN;
     avg_w_cycle_time    /= (float) LEN;
 
-    printf("平均周转时间:%5.2f平均等待时间:%5.2f平均带权周转时间%5.2f\n",avg_cycle_time, avg_waited_time, avg_w_cycle_time);
+    printf("ƽ����תʱ��:%5.2fƽ���ȴ�ʱ��:%5.2fƽ����Ȩ��תʱ��%5.2f\n",avg_cycle_time, avg_waited_time, avg_w_cycle_time);
 
 }
 
 void add_new_job(linked_queue * created_queue, int system_time)
 {
-    // 判断当前系统时间, 将后备队列中到达系统的作业链入就绪队列
+    // �жϵ�ǰϵͳʱ��, ���󱸶����е���ϵͳ����ҵ�����������
     while (!is_queue_empty(created_queue))
     {
         Job * front_job = peek_queue(created_queue);
         if (front_job->arrive_time > system_time)
         {
-            // 如果队头的到达系统时间比当前系统时间晚则退出循环
+            // �����ͷ�ĵ���ϵͳʱ��ȵ�ǰϵͳʱ�������˳�ѭ��
             break;
         }
         else
         {
-            // 把后备队列的队头出队, 然后将该作业入就绪队列
+            // �Ѻ󱸶��еĶ�ͷ����, Ȼ�󽫸���ҵ���������
             en_queue_node(ready_queue, de_queue(created_queue));
         }
     }    
@@ -213,51 +215,51 @@ void add_new_job(linked_queue * created_queue, int system_time)
 
 void fcfs_jobs() 
 {
-    // 先来先服务算法
-    int system_time = 0;        // 系统当前时间
-    Job * running_job = NULL;   // 当前正在使用处理机的作业
-    // 当后备作业队列不为空时
-    // 或就绪队列不为空时
-    // 或当前有作业正在使用处理机时
-    // 进行作业调度
+    // �����ȷ����㷨
+    int system_time = 0;        // ϵͳ��ǰʱ��
+    Job * running_job = NULL;   // ��ǰ����ʹ�ô���������ҵ
+    // ������ҵ���в�Ϊ��ʱ
+    // ��������в�Ϊ��ʱ
+    // ��ǰ����ҵ����ʹ�ô�����ʱ
+    // ������ҵ����
     while (!is_queue_empty(created_queue) || !is_queue_empty(ready_queue) || running_job != NULL)
     {
-        // 判断当前系统时间, 将后备队列中到达系统的作业链入就绪队列
+        // �жϵ�ǰϵͳʱ��, ���󱸶����е���ϵͳ����ҵ�����������
         add_new_job(created_queue, system_time);
 
-        // 判断当前是否有作业正在使用处理机
+        // �жϵ�ǰ�Ƿ�����ҵ����ʹ�ô�����
         if (running_job == NULL)
         {
-            // 无作业正在使用处理机
-            // 当前就绪队列不为空时, 则从就绪队列出队一个作业去使用处理机
+            // ����ҵ����ʹ�ô�����
+            // ��ǰ�������в�Ϊ��ʱ, ��Ӿ������г���һ����ҵȥʹ�ô�����
             if (!is_queue_empty(ready_queue))
                 running_job = de_queue(ready_queue);
             else
             {
-                // 就绪队列为空时, 系统时间步进一个时间单位, 退出该层调度的循环
-                printf("系统%d时刻, 就绪队列为空, 处理机空闲\n", system_time);
-                // 系统向前推进一个时间单位
+                // ��������Ϊ��ʱ, ϵͳʱ�䲽��һ��ʱ�䵥λ, �˳��ò���ȵ�ѭ��
+                printf("ϵͳ%dʱ��, ��������Ϊ��, ����������\n", system_time);
+                // ϵͳ��ǰ�ƽ�һ��ʱ�䵥λ
                 ++system_time;
                 continue;
             }
         }
-        // 当前有一个作业正在使用处理机
+        // ��ǰ��һ����ҵ����ʹ�ô�����
         else
         {
-            // 如果当前有作业正在使用处理机
-            // 判断其使用处理机的时间已经满足其要求服务时间
+            // �����ǰ����ҵ����ʹ�ô�����
+            // �ж���ʹ�ô�������ʱ���Ѿ�������Ҫ�����ʱ��
             if (running_job->used_time == running_job->require_time)
             {
-                // 该作业要求服务时间已满足
-                // 记录该作业完成时间
+                // ����ҵҪ�����ʱ��������
+                // ��¼����ҵ���ʱ��
                 running_job->ended_time = system_time;
-                // 计算其各种时间(周转时间、等待时间、带权周转时间)
+                // ���������ʱ��(��תʱ�䡢�ȴ�ʱ�䡢��Ȩ��תʱ��)
                 record_job_time(running_job);
-                // 将该作业链入完成队列
+                // ������ҵ������ɶ���
                 en_queue_node(ended_queue, running_job);
-                printf("作业: %c已完成, 开始时间: %d 完成时间: %d\n", 
+                printf("��ҵ: %c�����, ��ʼʱ��: %d ���ʱ��: %d\n", 
                                 running_job->job_pid, running_job->ended_time - running_job->require_time, running_job->ended_time);
-                // 调度新的作业使用处理机
+                // �����µ���ҵʹ�ô�����
                 if (!is_queue_empty(ready_queue))
                     running_job = de_queue(ready_queue);
                 else
@@ -265,13 +267,13 @@ void fcfs_jobs()
             }
         }
         
-        // 系统时间步进
+        // ϵͳʱ�䲽��
         system_time++;
-        // 正在运行的作业的使用处理机时间 +1
+        // �������е���ҵ��ʹ�ô�����ʱ�� +1
         if (running_job != NULL)
             running_job->used_time++;
     }
-    printf("FCFS算法的调度信息:\n");
+    printf("FCFS�㷨�ĵ�����Ϣ:\n");
     printf("--------------------\n");
     print_average_value();
     printf("--------------------\n");
@@ -279,49 +281,49 @@ void fcfs_jobs()
 }
 
 void sjf_jobs()
-{   // 短作业优先算法
-    int system_time = 0;        // 系统当前时间
-    Job * running_job = NULL;   // 当前正在使用处理机的作业
-    /* 当后备作业队列不为空时 */
-    /* 或就绪队列不为空时 */
-    /* 或当前有作业正在使用处理机时 */
-    /* 进行作业调度 */
+{   // ����ҵ�����㷨
+    int system_time = 0;        // ϵͳ��ǰʱ��
+    Job * running_job = NULL;   // ��ǰ����ʹ�ô���������ҵ
+    /* ������ҵ���в�Ϊ��ʱ */
+    /* ��������в�Ϊ��ʱ */
+    /* ��ǰ����ҵ����ʹ�ô�����ʱ */
+    /* ������ҵ���� */
     while (!is_queue_empty(created_queue) || !is_queue_empty(ready_queue) || running_job != NULL)
     {
-        // 判断当前系统时间, 将后备队列中到达系统的作业链入就绪队列
+        // �жϵ�ǰϵͳʱ��, ���󱸶����е���ϵͳ����ҵ�����������
         add_new_job(created_queue, system_time);
 
-        // 判断当前是否有作业正在使用处理机
+        // �жϵ�ǰ�Ƿ�����ҵ����ʹ�ô�����
         if (running_job == NULL)
         {
-            // 无作业正在使用处理机
-            // 当前就绪队列不为空时, 则将就绪队列出队一个所需时间最短的作业去使用处理机
+            // ����ҵ����ʹ�ô�����
+            // ��ǰ�������в�Ϊ��ʱ, �򽫾������г���һ������ʱ����̵���ҵȥʹ�ô�����
             if (!is_queue_empty(ready_queue))
                 running_job = get_shortest_job(ready_queue);
             else
             {
-                // 就绪队列为空时, 系统时间步进一个时间单位, 退出该层调度的循环
-                printf("系统%d时刻, 就绪队列为空, 处理机空闲\n", system_time);
-                // 系统向前推进一个时间单位
+                // ��������Ϊ��ʱ, ϵͳʱ�䲽��һ��ʱ�䵥λ, �˳��ò���ȵ�ѭ��
+                printf("ϵͳ%dʱ��, ��������Ϊ��, ����������\n", system_time);
+                // ϵͳ��ǰ�ƽ�һ��ʱ�䵥λ
                 ++system_time;
                 continue;
             }
         }
         else
-        {   // 当前有一个作业正在使用处理机
-            // 则判断其使用处理机的时间已经满足其要求服务时间
+        {   // ��ǰ��һ����ҵ����ʹ�ô�����
+            // ���ж���ʹ�ô�������ʱ���Ѿ�������Ҫ�����ʱ��
             if (running_job->used_time == running_job->require_time)
             {
-                // 该作业要求服务时间已满足
-                // 记录该作业完成时间
+                // ����ҵҪ�����ʱ��������
+                // ��¼����ҵ���ʱ��
                 running_job->ended_time = system_time;
-                // 计算其各种时间(周转时间、等待时间、带权周转时间)
+                // ���������ʱ��(��תʱ�䡢�ȴ�ʱ�䡢��Ȩ��תʱ��)
                 record_job_time(running_job);
-                // 将该作业链入完成队列
+                // ������ҵ������ɶ���
                 en_queue_node(ended_queue, running_job);
-                printf("作业: %c已完成, 开始时间: %d 完成时间: %d\n", 
+                printf("��ҵ: %c�����, ��ʼʱ��: %d ���ʱ��: %d\n", 
                                 running_job->job_pid, running_job->ended_time - running_job->require_time, running_job->ended_time);
-                // 调度新的作业使用处理机
+                // �����µ���ҵʹ�ô�����
                 if (!is_queue_empty(ready_queue))
                     running_job = get_shortest_job(ready_queue);
                 else
@@ -329,13 +331,13 @@ void sjf_jobs()
             }
         }
         
-        // 系统时间步进
+        // ϵͳʱ�䲽��
         system_time++;
-        // 正在运行的作业的使用处理机时间 +1
+        // �������е���ҵ��ʹ�ô�����ʱ�� +1
         if (running_job != NULL)
             running_job->used_time++;
     }
-    printf("SJF算法的调度信息:\n");
+    printf("SJF�㷨�ĵ�����Ϣ:\n");
     printf("--------------------\n");
     print_average_value();
     printf("--------------------\n");
@@ -344,9 +346,9 @@ void sjf_jobs()
 }
 
 void rr_jobs(int q)
-{   // 时间片轮转RR算法, 传入时间片参数q
-    int system_time = 0;        // 系统当前时间
-    Job * running_job = NULL;          // 当前正在使用处理机的作业
+{   // ʱ��Ƭ��תRR�㷨, ����ʱ��Ƭ����q
+    int system_time = 0;        // ϵͳ��ǰʱ��
+    Job * running_job = NULL;          // ��ǰ����ʹ�ô���������ҵ
     while (!is_queue_empty(created_queue) || !is_queue_empty(ready_queue) || running_job != NULL)
     {
     
@@ -354,15 +356,20 @@ void rr_jobs(int q)
  	   if(running_job != NULL)
     	{
     		en_queue_node(ready_queue, running_job);
-    		running_job == NULL;	
+    		running_job = NULL;	
     	}
     	int used_time_slice = 0, flag = TRUE;
     	while(flag) 
     	{
     		if(running_job == NULL)
     		{
-    			if(!is_queue_empty(ready_queue))
+    			if(!is_queue_empty(ready_queue)){
     				running_job = de_queue(ready_queue);
+                    if (!running_job->has_serviced){
+                        running_job->has_serviced = TRUE;
+                        running_job->servied_time = system_time;
+                    }
+                }
     			else
     			{
     				printf("%d time, CPU is free", system_time);
@@ -380,8 +387,9 @@ void rr_jobs(int q)
     				running_job->ended_time = system_time;
     				record_job_time(running_job);
     				en_queue_node(ended_queue, running_job);
-    				printf("%c finished, arrival time: %d, finished time: %d", running_job->job_pid, running_job->arrive_time, running_job->ended_time);
-    				flag = 0;
+    				printf("%c finished, service time: %d, finished time: %d\n", running_job->job_pid, running_job->servied_time, running_job->ended_time);
+    				running_job = NULL;
+                    flag = 0;
     			} else if(used_time_slice == q)
     			{
     				flag = 0;
@@ -390,56 +398,56 @@ void rr_jobs(int q)
     	}
     }
 
-    printf("RR算法(时间片为%d)的调度信息:\n",q);
+    printf("RR�㷨(ʱ��ƬΪ%d)�ĵ�����Ϣ:\n",q);
     printf("--------------------\n");
     print_average_value();
     printf("--------------------\n");
 }
 
 void hrrn_jobs() 
-{   // 最高响应比优先算法 HRRN(非抢占)
-    int system_time = 0;        // 系统当前时间
-    Job * running_job = NULL;   // 当前正在使用处理机的作业
-    /* 当后备作业队列不为空时 */
-    /* 或就绪队列不为空时 */
-    /* 或当前有作业正在使用处理机时 */
-    /* 进行作业调度 */
+{   // �����Ӧ�������㷨 HRRN(����ռ)
+    int system_time = 0;        // ϵͳ��ǰʱ��
+    Job * running_job = NULL;   // ��ǰ����ʹ�ô���������ҵ
+    /* ������ҵ���в�Ϊ��ʱ */
+    /* ��������в�Ϊ��ʱ */
+    /* ��ǰ����ҵ����ʹ�ô�����ʱ */
+    /* ������ҵ���� */
     while (!is_queue_empty(created_queue) || !is_queue_empty(ready_queue) || running_job != NULL)
     {
-        // 判断当前系统时间, 将后备队列中到达系统的作业链入就绪队列
+        // �жϵ�ǰϵͳʱ��, ���󱸶����е���ϵͳ����ҵ�����������
         add_new_job(created_queue, system_time);
 
-        // 判断当前是否有作业正在使用处理机
+        // �жϵ�ǰ�Ƿ�����ҵ����ʹ�ô�����
         if (running_job == NULL)
         {
-            // 无作业正在使用处理机
-            // 当前就绪队列不为空时, 则将就绪队列出队一个所需时间最短的作业去使用处理机
+            // ����ҵ����ʹ�ô�����
+            // ��ǰ�������в�Ϊ��ʱ, �򽫾������г���һ������ʱ����̵���ҵȥʹ�ô�����
             if (!is_queue_empty(ready_queue))
                 running_job = get_high_response_job(ready_queue, system_time);
             else
             {
-                // 就绪队列为空时, 系统时间步进一个时间单位, 退出该层调度的循环
-                printf("系统%d时刻, 就绪队列为空, 处理机空闲\n", system_time);
-                // 系统向前推进一个时间单位
+                // ��������Ϊ��ʱ, ϵͳʱ�䲽��һ��ʱ�䵥λ, �˳��ò���ȵ�ѭ��
+                printf("ϵͳ%dʱ��, ��������Ϊ��, ����������\n", system_time);
+                // ϵͳ��ǰ�ƽ�һ��ʱ�䵥λ
                 ++system_time;
                 continue;
             }
         }
         else
-        {   // 当前有一个作业正在使用处理机
-            // 则判断其使用处理机的时间已经满足其要求服务时间
+        {   // ��ǰ��һ����ҵ����ʹ�ô�����
+            // ���ж���ʹ�ô�������ʱ���Ѿ�������Ҫ�����ʱ��
             if (running_job->used_time == running_job->require_time)
             {
-                // 该作业要求服务时间已满足
-                // 记录该作业完成时间
+                // ����ҵҪ�����ʱ��������
+                // ��¼����ҵ���ʱ��
                 running_job->ended_time = system_time;
-                // 计算其各种时间(周转时间、等待时间、带权周转时间)
+                // ���������ʱ��(��תʱ�䡢�ȴ�ʱ�䡢��Ȩ��תʱ��)
                 record_job_time(running_job);
-                // 将该作业链入完成队列
+                // ������ҵ������ɶ���
                 en_queue_node(ended_queue, running_job);
-                printf("作业: %c已完成, 开始时间: %d 完成时间: %d\n", 
+                printf("��ҵ: %c�����, ��ʼʱ��: %d ���ʱ��: %d\n", 
                                 running_job->job_pid, running_job->ended_time - running_job->require_time, running_job->ended_time);
-                // 调度新的作业使用处理机
+                // �����µ���ҵʹ�ô�����
                 if (!is_queue_empty(ready_queue))
                     running_job = get_high_response_job(ready_queue, system_time);
                 else
@@ -447,54 +455,54 @@ void hrrn_jobs()
             }
         }
         
-        // 系统时间步进
+        // ϵͳʱ�䲽��
         system_time++;
-        // 正在运行的作业的使用处理机时间 +1
+        // �������е���ҵ��ʹ�ô�����ʱ�� +1
         if (running_job != NULL)
             running_job->used_time++;
     }
-    printf("HRRN算法的调度信息:\n");
+    printf("HRRN�㷨�ĵ�����Ϣ:\n");
     printf("--------------------\n");
     print_average_value();
     printf("--------------------\n");    
 }
 
-// 作业节点入队
+// ��ҵ�ڵ����
 void en_queue_node(linked_queue * queue, Job * en_queue_pcb_node)
 {
-    // 将传入的Job作业节点入队
+    // �������Job��ҵ�ڵ����
     if (is_queue_empty(queue))
     {
         queue->front = en_queue_pcb_node;
         queue->rear = en_queue_pcb_node;
-    } else {// 队列非空
+    } else {// ���зǿ�
         queue->rear->next = en_queue_pcb_node;
         queue->rear = en_queue_pcb_node;
     }
 }
 
-// 判断队列是否非空
+// �ж϶����Ƿ�ǿ�
 int is_queue_empty(linked_queue * queue)
 {
     if ((queue->front == NULL) && (queue->rear == NULL)) return TRUE;
     else return FALSE;
 }
 
-// 队列出队队头元素
+// ���г��Ӷ�ͷԪ��
 Job * de_queue(linked_queue * queue)
 {
     Job * return_job;
     if (is_queue_empty(queue))
     {
-        printf("队列为空, 无法出队\n");
+        printf("����Ϊ��, �޷�����\n");
         return NULL;
     }
     return_job = queue->front;
     if (queue->front == queue->rear)
-    {// 只有一个节点
+    {// ֻ��һ���ڵ�
         queue->front = queue->rear =NULL;
     } else {
-        // 多于一个节点时
+        // ����һ���ڵ�ʱ
         queue->front = queue->front->next;
     }
     return_job->next = NULL;
@@ -502,13 +510,13 @@ Job * de_queue(linked_queue * queue)
     return return_job;
 }
 
-// 返回队头作业, 但不出队
+// ���ض�ͷ��ҵ, ��������
 Job * peek_queue(linked_queue * queue) 
 {
     return queue->front;
 }
 
-// 得到队列中需求时间最短的作业
+// �õ�����������ʱ����̵���ҵ
 Job * get_shortest_job(linked_queue *queue)
 {
     Job *p, *q, *shortest_job, *pre;
@@ -545,7 +553,7 @@ Job * get_shortest_job(linked_queue *queue)
     return shortest_job;  
 }
 
-// 得到队列中最高响应比的作业
+// �õ������������Ӧ�ȵ���ҵ
 Job * get_high_response_job(linked_queue * queue, int system_time)
 {
     Job *p, *q, *shortest_job, *pre;
