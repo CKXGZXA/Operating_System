@@ -190,7 +190,7 @@ void print_average_value()
     avg_waited_time     /= (float) LEN;
     avg_w_cycle_time    /= (float) LEN;
 
-    printf("平均周转时间:%5.2f平均等待时间:%5.2f平均带权周转时间%5.2f\n",avg_cycle_time, avg_waited_time, avg_w_cycle_time);
+    printf("平均周转时间:%5.2f 平均等待时间:%5.2f 平均带权周转时间%5.2f\n",avg_cycle_time, avg_waited_time, avg_w_cycle_time);
 
 }
 
@@ -257,8 +257,10 @@ void fcfs_jobs()
                 record_job_time(running_job);
                 // 将该作业链入完成队列
                 en_queue_node(ended_queue, running_job);
-                printf("作业: %c已完成, 开始时间: %d 完成时间: %d\n", 
-                                running_job->job_pid, running_job->ended_time - running_job->require_time, running_job->ended_time);
+                printf("作业号:%3c 到达时间:%3d 响应时间:%3d 完成时间:%3d 周转时间:%3d\n", 
+                                running_job->job_pid, running_job->arrive_time,
+                                running_job->ended_time - running_job->require_time, running_job->ended_time,
+                                running_job->cycle_time);
                 // 调度新的作业使用处理机
                 if (!is_queue_empty(ready_queue))
                     running_job = de_queue(ready_queue);
@@ -321,8 +323,10 @@ void sjf_jobs()
                 record_job_time(running_job);
                 // 将该作业链入完成队列
                 en_queue_node(ended_queue, running_job);
-                printf("作业: %c已完成, 开始时间: %d 完成时间: %d\n", 
-                                running_job->job_pid, running_job->ended_time - running_job->require_time, running_job->ended_time);
+                printf("作业号:%3c 到达时间:%3d 响应时间:%3d 完成时间:%3d 周转时间:%3d\n", 
+                                running_job->job_pid, running_job->arrive_time, 
+                                running_job->ended_time - running_job->require_time, running_job->ended_time,
+                                running_job->cycle_time);
                 // 调度新的作业使用处理机
                 if (!is_queue_empty(ready_queue))
                     running_job = get_shortest_job(ready_queue);
@@ -351,10 +355,11 @@ void rr_jobs(int q)
     Job * running_job = NULL;          // 当前正在使用处理机的作业
     while (!is_queue_empty(created_queue) || !is_queue_empty(ready_queue) || running_job != NULL)
     {
-    
-    	add_new_job(created_queue,system_time);
- 	   if(running_job != NULL)
-    	{
+        // 判断当前系统时间, 将后备队列中到达系统的作业链入就绪队列
+        add_new_job(created_queue,system_time);
+ 	    if(running_job != NULL)
+    	{   // 当前有作业正在使用处理机
+            // 则将此作业重新入就绪队列, 并将当前作业置空
     		en_queue_node(ready_queue, running_job);
     		running_job = NULL;	
     	}
@@ -362,36 +367,49 @@ void rr_jobs(int q)
     	while(flag) 
     	{
     		if(running_job == NULL)
-    		{
-    			if(!is_queue_empty(ready_queue)){
+    		{   // 当前无作业正在使用处理机 
+    			if(!is_queue_empty(ready_queue)){ // 如果就绪队列非空, 则从就绪队列中出队一个作业使用处理机
     				running_job = de_queue(ready_queue);
-                    if (!running_job->has_serviced){
+                    if (!running_job->has_serviced){ // 如果该作业未被服务过, 则将当前系统时间记录下来作为开始服务时间
                         running_job->has_serviced = TRUE;
                         running_job->servied_time = system_time;
                     }
                 }
     			else
     			{
-    				printf("%d time, CPU is free", system_time);
+    				printf("系统%d时刻, 就绪队列为空, 处理机空闲\n", system_time);
     				++system_time;
     				break;	
     			}	
     		}
     		else
     		{
+                // 当前有作业正在使用处理机
+                // 时间片步进一个单位
     			used_time_slice++;
+                // 系统时间步进一个单位
     			system_time++;
+                // 当前作业使用时间步进一个单位
     			running_job->used_time++;
     			if(running_job->used_time == running_job->require_time)
-    			{
+    			{   // 如果当前作业的需求时间已经得到满足
+                    // 记录结束时间
     				running_job->ended_time = system_time;
+                    // 计算该进程被调度过程中的各种时间
     				record_job_time(running_job);
+                    // 将此队列链入完成队列
     				en_queue_node(ended_queue, running_job);
-    				printf("%c finished, service time: %d, finished time: %d\n", running_job->job_pid, running_job->servied_time, running_job->ended_time);
+                    // 输出进程调度信息
+                printf("作业号:%3c 到达时间:%3d 响应时间:%3d 完成时间:%3d 周转时间:%3d\n", 
+                                running_job->job_pid, running_job->arrive_time,
+                                running_job->servied_time, running_job->ended_time,
+                                running_job->cycle_time);
+                    // 将正在使用处理机的作业置为空, 并将flag置为0, 即分配新的时间片
     				running_job = NULL;
                     flag = 0;
     			} else if(used_time_slice == q)
     			{
+                    // 当前时间片完, 分配新的时间片
     				flag = 0;
     			}	
     		}	
@@ -445,8 +463,10 @@ void hrrn_jobs()
                 record_job_time(running_job);
                 // 将该作业链入完成队列
                 en_queue_node(ended_queue, running_job);
-                printf("作业: %c已完成, 开始时间: %d 完成时间: %d\n", 
-                                running_job->job_pid, running_job->ended_time - running_job->require_time, running_job->ended_time);
+                printf("作业号:%3c 到达时间:%3d 响应时间:%3d 完成时间:%3d 周转时间:%3d\n", 
+                                running_job->job_pid, running_job->arrive_time,
+                                running_job->ended_time - running_job->require_time, running_job->ended_time,
+                                running_job->cycle_time);
                 // 调度新的作业使用处理机
                 if (!is_queue_empty(ready_queue))
                     running_job = get_high_response_job(ready_queue, system_time);
