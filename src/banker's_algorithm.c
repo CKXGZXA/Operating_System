@@ -1,48 +1,155 @@
 #include <stdio.h>
-#define M 10            // é¢„è®¾æœ€å¤§èµ„æºç§ç±»
-#define N 10            // é¢„è®¾æœ€å¤§è¿›ç¨‹æ•°ç›®
+#define TRUE 1
+#define FALSE 0
+#define M 10            // Ô¤Éè×î´ó×ÊÔ´ÖÖÀà
+#define N 10            // Ô¤Éè×î´ó½ø³ÌÊıÄ¿
 
-int n;                  // è¿›ç¨‹æ•°ç›®
-int m;                  // å¯ç”¨èµ„æºç§ç±»
-int Available[M];       // å¯åˆ©ç”¨èµ„æºå‘é‡
-int Max[N][M];          // æœ€å¤§éœ€æ±‚çŸ©é˜µ
-int Allocation[N][M];   // åˆ†é…çŸ©é˜µ
-int Need[N][M];         // éœ€æ±‚çŸ©é˜µ
-int Request[N];         // æ¯ä¸ªè¿›ç¨‹çš„è¯·æ±‚å‘é‡
+int n;                  // ½ø³ÌÊıÄ¿
+int m;                  // ¿ÉÓÃ×ÊÔ´ÖÖÀà
+int Available[M];       // ¿ÉÀûÓÃ×ÊÔ´ÏòÁ¿
+int Max[N][M];          // ×î´óĞèÇó¾ØÕó
+int Allocation[N][M];   // ·ÖÅä¾ØÕó
+int Need[N][M];         // ĞèÇó¾ØÕó
+int Request[M];         // ½ø³ÌµÄÇëÇóÏòÁ¿
 
+// ³õÊ¼»¯×ÊÔ´·ÖÅä
 void init_status()
-{// åˆå§‹åŒ–èµ„æºåˆ†é…
+{
     int i, j;
-    printf("è¯·è¾“å…¥æœ€å¤§è¿›ç¨‹æ•°ç›®å’Œå¯ç”¨èµ„æºç§ç±»æ•°:");
+    printf("ÇëÊäÈë×î´ó½ø³ÌÊıÄ¿ºÍ¿ÉÓÃ×ÊÔ´ÖÖÀàÊı:");
     scanf("%d%d",&n,&m);
-    printf("è¯·è¾“å…¥å„ç±»èµ„æºåœ¨ç³»ç»Ÿä¸­å¯ç”¨æ•°ç›®:");
+    printf("ÇëÊäÈë¸÷Àà×ÊÔ´ÔÚÏµÍ³ÖĞ¿ÉÓÃÊıÄ¿:");
     for(i = 0;i<m;++i)
         scanf("%d",&Available[i]);
-    printf("è¾“å…¥å„è¿›ç¨‹å¯¹å„èµ„æºçš„æœ€å¤§éœ€æ±‚:");
+    printf("ÊäÈë¸÷½ø³Ì¶Ô¸÷×ÊÔ´µÄ×î´óĞèÇó:\n");
     for ( i = 0; i < n; ++i)
     {
-        printf("è¿›ç¨‹P%d:",i);
+        printf("½ø³ÌP%d:",i);
         for ( j = 0; j < m; j++)
             scanf("%d", &Max[i][j]);       
     }
-    printf("è¯·è¾“å…¥åˆ†é…çŸ©é˜µ:\n");
+    printf("ÇëÊäÈë·ÖÅä¾ØÕó:\n");
     for (i = 0; i < n; ++i)
     {
         printf("P%d:",i);
         for (j = 0; j < m; ++j)
             scanf("%d",&Allocation[i][j]);
     }
-    // åˆå§‹åŒ–éœ€æ±‚çŸ©é˜µ
+    // ³õÊ¼»¯ĞèÇó¾ØÕó
     for (int i = 0; i < n; ++i)
     {
         for (int j = 0; j < m; ++j)
-            Need[n][m] = Max[n][m] - Allocation[n][m];
+            Need[i][j] = Max[i][j] - Allocation[i][j];
     }
     
 }
 
+// ÅĞ¶ÏaÏòÁ¿ÊÇ·ñÍêÈ«Ğ¡ÓÚbÏòÁ¿, ÈôÊÇ·µ»Øtrue, ·ñÔò·µ»Øfalse
+int cmp_vector(int * a, int * b)
+{
+    int i;
+    for (i = 0; i < m; ++i)
+        if(a[i] > b[i]) break;
+    if(i >= m) return TRUE;
+    else return FALSE;
+}
+
+// °²È«ĞÔËã·¨,ÅĞ¶ÏÏµÍ³ÊÇ·ñ´¦ÓÚ°²È«×´Ì¬
+int is_safe()
+{
+    int i;
+    int Work_and_Allocation[N][M];
+    int Seq[N],s = 0;   // Èç¹û´æÔÚ°²È«ĞòÁĞÔò¼ÇÂ¼
+    int Work[N][M],w = 0;    // ¹¤×÷ÏòÁ¿Work
+    int Finish[N];  // Ö¸Ê¾ÏµÍ³ÊÇ·ñÓĞ×ã¹»µÄ×ÊÔ´·ÖÅä¸ø½ø³ÌÊ¹Ö®Íê³É
+    // ³õÊ¼»¯WorkÏòÁ¿Ê¹Ö®µÈÓÚAvailableÏòÁ¿
+    for ( i = 0; i < m; ++i)
+        Work[w][i] = Available[i];
+    // ³õÊ¼»¯FinishÏòÁ¿È«ÎªFALSE
+    for ( i = 0; i < n; ++i)
+        Finish[i] = FALSE;
+    int flag1 = TRUE;   // Ö¸Ê¾ÊÇ·ñÕÒµ½ÄÜ¹»·ÖÅä×ÊÔ´µÄ½ø³Ì
+    while(flag1)
+    {
+        int flag2 = TRUE;
+        for (i = 0; i < n; ++i)
+        {
+            if (Finish[i] == FALSE)
+            {
+                if(cmp_vector(Need[i], Work[w])){
+                    {   // ÈôÏµÍ³ÓĞ×ã¹»µÄ×ÊÔ´¿ÉÒÔ·ÖÅä¸ø½ø³Ì
+                        // ÔòÔÚ½ø³ÌÔËĞĞ½áÊøºóÊÕ»Ø×ÊÔ´
+                        int j;
+                        for ( j = 0; j < m; ++j)
+                        {
+                            Work_and_Allocation[w][j] = Work[w][j] + Allocation[i][j];
+                            Work[w+1][j] = Work_and_Allocation[w][j];
+                        }
+                        ++w;
+                        Finish[i] = TRUE;
+                        Seq[s++] = i;
+                        flag2 = FALSE;
+                        break;  
+                    }
+                }
+            }
+        }
+        if (flag2)
+        {
+            for ( i = 0; i < n; ++i)
+            {
+                if(Finish[i] == FALSE) {
+                    break;
+                }
+            }
+            flag1 = FALSE;
+        }    
+    }
+    if (i >= n) {
+        printf("ÏµÍ³ÊÇ°²È«µÄ, °²È«ĞòÁĞÈçÏÂ:\n");
+        printf("½ø³Ì\tWork\tNeed\tAllocation\tWork+Allocation\n");
+        for(i = 0;i <n;++i)
+        {
+            printf("P%d\t",Seq[i]);
+            for (int j = 0; j < m; ++j)
+                printf("%d ",Work[i][j]);
+            printf("\t");
+            for (int j = 0; j < m; ++j)      
+                printf("%d ",Need[Seq[i]][j]);
+            printf("\t");
+            for (int j = 0; j < m; ++j)      
+                printf("%d ",Allocation[Seq[i]][j]);
+            printf("\t");
+            for (int j = 0; j < m; ++j)      
+                printf("%d ",Work_and_Allocation[i][j]);
+            printf("\n");
+        }
+        return TRUE;
+    }
+    else return FALSE;    
+}
+
+void banker_algorithm(int n)
+{
+    printf("ÇëÊäÈë½ø³ÌP%dµÄÇëÇóÏòÁ¿", n);
+    if (cmp_vector(Request[n], Need[n]))
+    {
+        if (cmp_vector(Request,Available))
+        {
+            
+        }
+        
+    } else { //ËùĞèÒªµÄ×ÊÔ´ÒÑ¾­³¬¹ıËüËùĞû²¼µÄ×î´óÖµ,±¨´í
+        printf("ERROR!ÇëÇó×ÊÔ´¹ı¶à,ÎŞ·¨·ÖÅä!");
+    }    
+}
+
 int main(int argc, char const *argv[])
 {
-    
+    // freopen("in.txt","r",stdin);
+    // ³õÊ¼»¯·ÖÅä
+    init_status();
+    // ÅĞ¶Ï°²È«ĞÔ
+    printf("%d",is_safe());
     return 0;
 }
