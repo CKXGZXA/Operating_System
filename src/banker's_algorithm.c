@@ -45,16 +45,42 @@ void init_status()
 }
 
 // 判断a向量是否完全小于b向量, 若是返回true, 否则返回false
-int cmp_vector(int * a, int * b)
+int cmp_vector(int * a, int * b);
+// 进行两个资源向量的简单运算, 结果存于a中
+void cal_vector(int * a, int * b, char op);
+
+// 安全性算法,判断系统是否处于安全状态,安全返回TRUE
+int is_safe();
+// 银行家算法
+void banker_algorithm();
+
+int main(int argc, char const *argv[])
 {
-    int i;
-    for (i = 0; i < m; ++i)
-        if(a[i] > b[i]) break;
-    if(i >= m) return TRUE;
-    else return FALSE;
+    printf("--------------简易模拟实现银行家算法--------------\n");
+    // 初始化分配
+    init_status();
+    printf("功能选择:\n1.判断此种资源分配状态是否安全\n2.判断某进程请求相应资源后系统能否满足其资源请求\n请输入序号选择功能或者键入0退出程序:");
+    int choice;
+    scanf("%d",&choice);
+    while(choice)
+    {   
+         switch (choice)
+        {
+            case 1:
+                is_safe();
+                break;
+            case 2:
+                banker_algorithm();
+        }
+        printf("功能选择:\n1.判断此种资源分配状态是否安全\n2.判断某进程请求相应资源后系统能否满足其资源请求\n请输入序号选择功能或者键入0退出程序:");
+        scanf("%d",&choice);
+    }
+    printf("\n--------------退出系统成功--------------\n");
+    return 0;
 }
 
-// 安全性算法,判断系统是否处于安全状态
+
+// 安全性算法,判断系统此时是否处于安全状态
 int is_safe()
 {
     int i;
@@ -129,27 +155,66 @@ int is_safe()
     else return FALSE;    
 }
 
-void banker_algorithm(int n)
+// 银行家算法
+void banker_algorithm()
 {
-    printf("请输入进程P%d的请求向量", n);
-    if (cmp_vector(Request[n], Need[n]))
+    int No;
+    printf("请输入进程号:");
+    scanf("%d",&No);
+    printf("请输入进程P%d的请求向量:", No);
+    for (int i = 0; i < m; ++i)
+        scanf("%d", &Request[i]);
+    
+    if (cmp_vector(Request, Need[No]))
     {
         if (cmp_vector(Request,Available))
-        {
-            
+        {   // 若系统有足够资源分配给进程
+            // 则试探性地将资源分配给进程
+            // 并修改相关向量的值
+            cal_vector(Available, Request, '-');
+            cal_vector(Allocation[No], Request, '+');
+            cal_vector(Need[No], Request, '-');  
+
+            // 随后执行安全性算法, 判断系统是否处于安全状态
+            is_safe();
+
+            // 恢复最初的资源分配状态
+            cal_vector(Available, Request, '+');
+            cal_vector(Allocation[No], Request, '-');
+            cal_vector(Need[No], Request, '+');                
+        } else {
+            printf("此时系统尚无足够资源,P%d需等待\n",No);
         }
         
     } else { //所需要的资源已经超过它所宣布的最大值,报错
-        printf("ERROR!请求资源过多,无法分配!");
+        printf("ERROR!请求资源过多,超过其最大需求量,无法分配!");
     }    
 }
 
-int main(int argc, char const *argv[])
+
+// 判断a向量是否完全小于b向量, 若是返回true, 否则返回false
+int cmp_vector(int * a, int * b)
 {
-    // freopen("in.txt","r",stdin);
-    // 初始化分配
-    init_status();
-    // 判断安全性
-    printf("%d",is_safe());
-    return 0;
+    int i;
+    for (i = 0; i < m; ++i)
+        if(a[i] > b[i]) break;
+    if(i >= m) return TRUE;
+    else return FALSE;
+}
+
+// 进行两个资源向量的简单运算, 结果存于a中
+void cal_vector(int * a, int *b, char op)
+{
+    switch (op)
+    {
+    case '+':
+        for (int i = 0; i < m; ++i)
+            a[i] += b[i];
+        break;
+    case '-':
+        for (int i = 0; i < m; ++i)
+            a[i] -= b[i];
+    default:
+        break;
+    }
 }
