@@ -1,18 +1,313 @@
 #include <stdio.h>
-#include <string.h>
+#include <malloc.h>
+#define MAX 10
 
 typedef struct memblock{
-    int head;                //åœ°å€
-    int length;               //é•¿åº¦
-    int state;                //çŠ¶æ€ï¼Œ0è¡¨ç¤ºç©ºé—²ï¼Œ1è¡¨ç¤ºå ç”¨
-    int jobid;                //å·²åˆ†é…ï¼Œè®°å½•ä½œä¸šIDï¼Œå¦åˆ™ä¸º0
-    memblock * pre;          //æ‰€åœ¨ç©ºé—²åˆ†åŒºé˜Ÿåˆ—çš„å‰ä¸€ä¸ªåˆ†åŒº
-    memblock * next;         //æ‰€åœ¨ç©ºé—²åˆ†åŒºé˜Ÿåˆ—çš„åä¸€ä¸ªåˆ†åŒº
+    int head;                //µØÖ·
+    int length;               //³¤¶È
+    // int state;                //×´Ì¬£¬0±íÊ¾¿ÕÏĞ£¬1±íÊ¾Õ¼ÓÃ
+    // int jobid;                //ÒÑ·ÖÅä£¬¼ÇÂ¼×÷ÒµID£¬·ñÔòÎª0
 }memblock;
 
-
-int main(int argc, char const *argv[])
+typedef struct 
 {
+    int jobid;
+    int memory;
+    int mem_no;
+}Job;
+
+
+
+int N;                          // ¿ÕÏĞÄÚ´æÊıÄ¿
+memblock free_mem[MAX];         // ¿ÕÏĞ·ÖÇøÊı×é
+// memblock backup[MAX];           // ±¸·İÊı×é,ÓÃÓÚ»¹Ô­³õÊ¼¿ÕÏĞÄÚ´æ×´Ì¬
+struct{                 // ×÷Òµ¼òÒ×¶ÓÁĞ
+    Job jobs[MAX];
+    int front;
+    int rear;
+    int M;                          // ÇëÇó·ÖÅäÄÚ´æ×÷ÒµÊıÄ¿
+}job_queue;                         
+
+// ³õÊ¼»¯¿ÕÏĞ·ÖÇø
+void init_memory();
+
+// Êä³ö¿ÕÏĞÄÚ´æ·ÖÇø±íĞÅÏ¢
+void print_Mem_info();
+
+// ³õÊ¼»¯ÇëÇó×÷Òµ
+void init_jobs();
+
+// Ê×´ÎÊÊÓ¦Ëã·¨
+void First_Fit()
+{
+    for (int i = 0; i < job_queue.M; ++i)
+    {
+        for ( int j = 0; j < N; ++j)
+        {
+            if (job_queue.jobs[i].memory <= free_mem[j].length)
+            {
+                free_mem[j].length -= job_queue.jobs[i].memory;
+                free_mem[j].head += job_queue.jobs[i].memory;
+                job_queue.jobs[i].mem_no = j;
+                break;
+            }            
+        }
+    }
+}
+
+// Ñ­»·Ê×´ÎÊÊÓ¦Ëã·¨
+void Next_Fit()
+{
+    int p = 0;  // ¼ÇÂ¼ÉÏÒ»´Î·ÖÅäÄÚ´æµÄÎ»ÖÃ
+    for (int i = 0; i < job_queue.M; ++i)
+    {
+        for ( int j = 0; j < N; ++j)
+        {
+            if (job_queue.jobs[i].memory <= free_mem[p].length)
+            {
+                free_mem[p].length -= job_queue.jobs[i].memory;
+                free_mem[p].head += job_queue.jobs[i].memory;
+                job_queue.jobs[i].mem_no = p;
+                p = (++p)%N;
+                break;
+            }            
+        }        
+    }
     
+}
+
+// ×î¼ÑÊÊÓ¦Ëã·¨
+void Best_Fit()
+{  
+    Sort_Freemem(0); // ½«ÄÚ´æ°´´óĞ¡´ÓĞ¡µ½´ï½øĞĞÅÅĞò
+    for (int i = 0; i < job_queue.M; ++i)
+    {
+        for ( int j = 0; j < N; ++j)
+        {
+            if (job_queue.jobs[i].memory <= free_mem[j].length)
+            {
+                free_mem[j].length -= job_queue.jobs[i].memory;
+                free_mem[j].head += job_queue.jobs[i].memory;
+                job_queue.jobs[i].mem_no = j;
+                break;
+            }            
+        }
+        Sort_Freemem(0); // ·ÖÅäÍê½øĞĞÔÙÅÅĞò 
+    }
+}
+
+void Worst_Fit()
+{
+    Sort_Freemem(1); // ½«ÄÚ´æ°´´óĞ¡´Ó´ó½ÏĞ¡½øĞĞÅÅĞò
+    for (int i = 0; i < job_queue.M; ++i)
+    {
+        for ( int j = 0; j < N; ++j)
+        {
+            if (job_queue.jobs[i].memory <= free_mem[j].length)
+            {
+                free_mem[j].length -= job_queue.jobs[i].memory;
+                free_mem[j].head += job_queue.jobs[i].memory;
+                job_queue.jobs[i].mem_no = j;
+                break;
+            }            
+        }
+        Sort_Freemem(1); // ·ÖÅäÍê½øĞĞÔÙÅÅĞò 
+    }
+}
+
+
+// »ØÊÕÖ¸¶¨×÷ÒµµÄÄÚ´æ¿Õ¼ä
+int Recycling_Mem();
+
+// »Ö¸´³õÊ¼×´Ì¬
+void Recover();
+
+// ½«¿ÕÏĞ·ÖÇø±í°´¿Õ¼ä½øĞĞÖ¸¶¨Ë³ĞòÅÅĞò
+void Sort_Freemem(int op);
+
+// ´òÓ¡²Ëµ¥
+void print_menu();
+
+int main()
+{
+    printf("*************ÄÚ´æ·ÖÅäºÍ»ØÊÕ***********\n");
+    init_memory();
+    init_jobs();
+    print_menu();
+    int choice;
+    scanf("%d", &choice);
+    while (choice)
+    {
+        switch (choice)
+        {
+        case 1:
+            First_Fit();
+            break;
+        case 2:
+            Next_Fit();
+            break;
+        case 3:
+            Best_Fit();
+            break;
+        case 4:
+            Worst_Fit();
+            break;
+        case 5:
+            Recycling_Mem();
+            break;
+        case 6:
+            print_Mem_info();
+            break;
+        case 7:
+            Recover();
+            break;
+        default:
+            break;
+        }
+        print_menu();
+        scanf("%d",&choice);
+    }    
     return 0;
+}
+
+// ´òÓ¡²Ëµ¥
+void print_menu()
+{
+    printf("\n=================================\n");
+    printf("0. ÍË³ö\n");
+    printf("1. Ê×´ÎÊÊÓ¦Ëã·¨Îª¶ÓÊ××÷Òµ·ÖÅäÄÚ´æ¿Õ¼ä\n");
+    printf("2. Ñ­»·Ê×´ÎÊÊÓ¦Ëã·¨Îª¶ÓÊ××÷Òµ·ÖÅäÄÚ´æ¿Õ¼ä\n");
+    printf("3. ×î¼ÑÊÊÓ¦Ëã·¨Îª¶ÓÊ××÷Òµ·ÖÅäÄÚ´æ¿Õ¼ä\n");
+    printf("4. ×î»µÊÊÓ¦Ëã·¨Îª¶ÓÊ××÷Òµ·ÖÅäÄÚ´æ¿Õ¼ä\n");
+    printf("5. »ØÊÕÖ¸¶¨×÷ÒµµÄÄÚ´æ¿Õ¼ä\n");
+    printf("6. ÏÔÊ¾µ±Ç°ÄÚ´æ·ÖÅäÇé¿ö\n");
+    printf("7. »¹Ô­³õÊ¼×´Ì¬\n");
+    printf("=================================\n");
+    printf("ÇëÊäÈëÊı×ÖÒÔÑ¡Ôñ:");
+}
+
+// ³õÊ¼»¯¿ÕÏĞ·ÖÇø
+void init_memory()
+{
+    int n;
+    printf("ÇëÊäÈëÄÚ´æ·ÖÇøÊıÁ¿:");
+    scanf("%d", &N);
+    printf("ÇëÊäÈë¸÷¿ÕÏĞ·ÖÇø´óĞ¡ºÍÄÚ´æÆğÖ·:\n");    
+    for(int i = 0;i < N; ++i)
+    {
+        // ³õÊ¼»¯¿ÕÏĞ·ÖÇøµÄ¸÷ÏîĞÅÏ¢
+        printf("·ÖÇøºÅ%d:",i);
+        scanf("%d %d",&free_mem[i].length, &free_mem[i].head);
+        // backup[i].length = free_mem[i].length;
+        // backup[i].head = free_mem[i].head;
+    }
+} 
+
+// ³õÊ¼»¯ÇëÇó×÷Òµ
+void init_jobs()
+{
+    job_queue.front = job_queue.rear = 0;
+    printf("\n=================================\n");   
+    printf("========³õÊ¼»¯ÇëÇó×÷Òµ============\n"); 
+    printf("ÇëÊäÈë´ıÇëÇó×÷Òµ¸öÊı:");
+    scanf("%d", &job_queue.M);
+    printf("ÇëÊäÈë×÷ÒµIDÒÔ¼°ÇëÇóµÄÄÚ´æ´óĞ¡:\n");
+    for (int i = 0; i < job_queue.M; ++i)
+    {
+        printf("×÷Òµ%d:",i+1);
+        scanf("%d%d",&job_queue.jobs[job_queue.rear].jobid,&job_queue.jobs[job_queue.rear].memory);
+        job_queue.jobs[job_queue.rear].mem_no = -1;     //³õÊ¼»¯Îª-1, ±íÊ¾Î´·ÖÅä
+        ++job_queue.rear;
+    }  
+}
+
+// Êä³ö¿ÕÏĞÄÚ´æ·ÖÇø±íĞÅÏ¢
+void print_Mem_info()
+{
+    int seq;
+    printf("\n=========¿ÕÏĞÄÚ´æ·ÖÇø±íĞÅÏ¢===============\n");
+    printf("\n·ÖÇøºÅ\t·ÖÇø´óĞ¡(KB)\t·ÖÇøÊ¼Ö·\n");
+    for (int i = 0,seq = 0; i < N; i++)
+    {
+        if(0 != free_mem[i].length){
+            printf("%4d\t%5d\t\t%5d\n",i,free_mem[i].length,free_mem[i].head);
+            ++seq;
+        }
+    }
+    printf("\n========================================\n");
+}
+
+void Recover()
+{
+    for (int i = 0; i < job_queue.M; ++i)
+    {
+        if(job_queue.jobs[i].mem_no != -1){
+            free_mem[job_queue.jobs[i].mem_no].head -= job_queue.jobs[i].memory;
+            free_mem[job_queue.jobs[i].mem_no].length += job_queue.jobs[i].memory;
+            job_queue.jobs[i].mem_no = -1;
+        }
+    }
+}
+
+int Recycling_Mem()
+{
+    int no;
+    printf("ÇëÊäÈëĞèÒªÊÍ·ÅÄÚ´æµÄ½ø³ÌID:");
+    scanf("%d", &no);
+    for (int i = 0; i < job_queue.M; ++i)
+    {
+        if (job_queue.jobs[i].jobid == no && job_queue.jobs[i].mem_no != -1)
+        {
+            free_mem[job_queue.jobs[i].mem_no].head -= job_queue.jobs[i].memory;
+            free_mem[job_queue.jobs[i].mem_no].length += job_queue.jobs[i].memory;
+            job_queue.jobs[i].mem_no = -1;
+            return 1;
+        }
+        else if (job_queue.jobs[i].jobid == no && job_queue.jobs[i].mem_no == -1)
+        {
+            printf("¸Ã½ø³ÌÎ´Õ¼ÓÃÄÚ´æ»òÇëÇóÄÚ´æÊ§°Ü!");
+            return 1;
+        }
+    }
+    printf("¸Ã½ø³ÌID²»´æÔÚ!");
+    return 0;
+}
+
+// °´ÊäÈëÖ¸Áî±È½Ï´óĞ¡, Èç¹ûopÎª0Ôò·µ»Øx>yµÄÖµ, Èç¹ûopÎª1Ôò·µ»Øx<yµÄÖµ
+int cmp(int x, int y, int op)
+{
+    switch (op)
+    {
+    case 0:
+        return x > y;
+    
+    case 1:
+        return x < y;
+    }
+}
+
+void Sort_Freemem(int op)
+{
+    for (int i = 0; i < N - 1; i++) {       
+        for (int j = i; j < N; j++) {
+            if (cmp(free_mem[i].length,free_mem[j].length,op)) {
+                for (int k = 0; k < job_queue.M; ++k)
+                {
+                    if(job_queue.jobs[k].mem_no == i)
+                    {
+                        job_queue.jobs[k].mem_no = j;
+                    }
+                    else if (job_queue.jobs[k].mem_no == j)
+                    {
+                        job_queue.jobs[k].mem_no = i;
+                    }
+                    
+                }
+                
+                memblock temp = free_mem[i];
+                free_mem[i] = free_mem[j];
+                free_mem[j] = temp;
+            }
+        }
+    }
 }
