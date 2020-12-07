@@ -37,6 +37,9 @@ void print_Mem_info();
 // 初始化请求作业
 void init_jobs();
 
+// 将空闲分区表按空间进行指定顺序排序
+void Sort_Freemem(int op);
+
 // 首次适应算法
 void First_Fit()
 {
@@ -61,14 +64,14 @@ void Next_Fit()
     int p = 0;  // 记录上一次分配内存的位置
     for (int i = 0; i < job_queue.M; ++i)
     {
-        for ( int j = 0; j < N; ++j)
+        for ( int j = p; j < N; ++j)
         {
-            if (job_queue.jobs[i].memory <= free_mem[p].length)
+            if (job_queue.jobs[i].memory <= free_mem[j].length)
             {
-                free_mem[p].length -= job_queue.jobs[i].memory;
-                free_mem[p].head += job_queue.jobs[i].memory;
+                free_mem[j].length -= job_queue.jobs[i].memory;
+                free_mem[j].head += job_queue.jobs[i].memory;
                 job_queue.jobs[i].mem_no = p;
-                p = (++p)%N;
+                p = (++j)%N;
                 break;
             }            
         }        
@@ -122,8 +125,6 @@ int Recycling_Mem();
 // 恢复初始状态
 void Recover();
 
-// 将空闲分区表按空间进行指定顺序排序
-void Sort_Freemem(int op);
 
 // 打印菜单
 void print_menu();
@@ -141,15 +142,19 @@ int main()
         switch (choice)
         {
         case 1:
+            printf("运行首次适应算法分配内存请求\n");
             First_Fit();
             break;
         case 2:
+            printf("运行循环首次适应算法分配内存请求\n");
             Next_Fit();
             break;
         case 3:
+            printf("运行最佳适应算法分配内存请求\n");
             Best_Fit();
             break;
         case 4:
+            printf("运行最坏适应算法分配内存请求\n");
             Worst_Fit();
             break;
         case 5:
@@ -159,9 +164,8 @@ int main()
             print_Mem_info();
             break;
         case 7:
+            printf("恢复初始分配\n");
             Recover();
-            break;
-        default:
             break;
         }
         print_menu();
@@ -173,7 +177,7 @@ int main()
 // 打印菜单
 void print_menu()
 {
-    printf("\n=================================\n");
+    printf("\n=============菜单================\n");
     printf("0. 退出\n");
     printf("1. 首次适应算法为队首作业分配内存空间\n");
     printf("2. 循环首次适应算法为队首作业分配内存空间\n");
@@ -190,7 +194,7 @@ void print_menu()
 void init_memory()
 {
     int n;
-    printf("请输入内存分区数量:");
+    printf("请输入空闲内存分区数量:");
     scanf("%d", &N);
     printf("请输入各空闲分区大小和内存起址:\n");    
     for(int i = 0;i < N; ++i)
@@ -207,8 +211,7 @@ void init_memory()
 void init_jobs()
 {
     job_queue.front = job_queue.rear = 0;
-    printf("\n=================================\n");   
-    printf("========初始化请求作业============\n"); 
+    printf("\n========初始化请求作业============\n"); 
     printf("请输入待请求作业个数:");
     scanf("%d", &job_queue.M);
     printf("请输入作业ID以及请求的内存大小:\n");
@@ -218,7 +221,8 @@ void init_jobs()
         scanf("%d%d",&job_queue.jobs[job_queue.rear].jobid,&job_queue.jobs[job_queue.rear].memory);
         job_queue.jobs[job_queue.rear].mem_no = -1;     //初始化为-1, 表示未分配
         ++job_queue.rear;
-    }  
+    }
+    printf("\n========请求作业录入完毕==========\n");
 }
 
 // 输出空闲内存分区表信息
@@ -230,7 +234,7 @@ void print_Mem_info()
     for (int i = 0,seq = 0; i < N; i++)
     {
         if(0 != free_mem[i].length){
-            printf("%4d\t%5d\t\t%5d\n",i,free_mem[i].length,free_mem[i].head);
+            printf("%4d\t%5d\t\t%5d\n",seq,free_mem[i].length,free_mem[i].head);
             ++seq;
         }
     }
