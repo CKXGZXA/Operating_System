@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "cstdio": "c",
+        "xstring": "c",
+        "xutility": "c"
+    }
+}
