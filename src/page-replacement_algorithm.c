@@ -135,7 +135,7 @@ void FIFO()
 int main()
 {
 
-    FIFO();
+    FIFO(); 
     
     return 0;
 }
