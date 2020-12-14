@@ -1,38 +1,50 @@
 #include <stdio.h>
 
-// æœ€å¤§é¡µæ•°
-#define N 20
-// å†…å­˜é¡µä¸ªæ•°
-#define Msize 3
-// ç¼ºé¡µç‡
-float rate;
-// ç¼ºé¡µæ•°
-int lack;
-// é¡µé¢èµ°å‘åºåˆ—
-int Pages[N] = {7,0,1,2,0,3,0,4,2,3,0,3,2,1,2,0,1,7,0,1};
-// å†…å­˜é¡µ
+// ×î´óÒ³Êı
+#define N 12
+// ÄÚ´æÒ³¸öÊı
+#define Msize  5//4 3
+// È±Ò³ÂÊ
+float rate[4];
+// È±Ò³Êı
+int lack[4];
+// Ò³Ãæ×ßÏòĞòÁĞ
+int Pages[N] = {1,2,3,4,1,2,5,1,2,3,4,5};//{4,3,2,1,4,3,5,4,3,2,1,5};
+// ÄÚ´æÒ³
 int memory[Msize];
 
-
-// è¾“å‡ºå½“å‰å†…å­˜é¡µé¢æƒ…å†µ
+// ·µ»ØÊı×éÖĞµÄ×î´óÖµÏÂ±ê
+int max(int a[], int size)
+{
+    int m = 0;
+    for (int i = 0; i < size; ++i)
+    {
+        if (a[i] > a[m])
+        {
+            m = i;
+        } 
+    }
+    return m;
+}
+// Êä³öµ±Ç°ÄÚ´æÒ³ÃæÇé¿ö
 void print_m(int cur)
 {
     for (int i = 0; i < Msize; ++i)
-        if (-1 != memory[i])printf("%d\t",memory[i]);
+        if (-1 != memory[i]) printf("%d\t",memory[i]);
     printf("\n");
 }
-// åˆå§‹åŒ–ç¼ºé¡µç‡,ç¼ºé¡µæ•°å’Œå†…å­˜åˆ†é…ä¿¡æ¯
-void init()
+// ³õÊ¼»¯È±Ò³ÂÊ,È±Ò³ÊıºÍÄÚ´æ·ÖÅäĞÅÏ¢
+void init(int x)
 {
-    rate = 0;
-    lack = 0;
+    rate[x] = 0;
+    lack[x] = 0;
     for (int i = 0; i < Msize; ++i)
     {
         memory[i] = -1;
     }   
 }
 
-// åˆ¤æ–­å†…å­˜ä¸­æ˜¯å¦è¿˜æœ‰ç©ºä½™,æ— ç©ºä½™è¿”å›-1,æœ‰ç©ºä½™è¿”å›ç©ºé—²å†…å­˜åºå·
+// ÅĞ¶ÏÄÚ´æÖĞÊÇ·ñ»¹ÓĞ¿ÕÓà,ÎŞ¿ÕÓà·µ»Ø-1,ÓĞ¿ÕÓà·µ»Ø¿ÕÏĞÄÚ´æĞòºÅ
 int is_full()
 {
     for (int i = 0; i < Msize; i++)
@@ -44,7 +56,7 @@ int is_full()
     }
     return -1;
 }
-// åˆ¤æ–­å½“å‰é¡µæ˜¯å¦å·²åœ¨å†…å­˜ä¸­,ä¸åœ¨è¿”å›-1, è‹¥åœ¨è¿”å›æ‰€åœ¨å†…å­˜åºå·
+// ÅĞ¶Ïµ±Ç°Ò³ÊÇ·ñÒÑÔÚÄÚ´æÖĞ,²»ÔÚ·µ»Ø-1, ÈôÔÚ·µ»ØËùÔÚÄÚ´æĞòºÅ
 int is_in(int page)
 {
     for (int i = 0; i < Msize; ++i)
@@ -53,11 +65,11 @@ int is_in(int page)
     }
     return -1;
 }
-// è¿”å›æœ€é•¿æ—¶é—´åä½¿ç”¨åˆ°çš„å†…å­˜åˆ†é¡µåºå·,å³OPTåº”è¯¥æ·˜æ±°çš„å†…å­˜åˆ†é¡µ,ä¼ å…¥å½“å‰é¡µé¢èµ°å‘åºåˆ—å·å¼€å§‹æœç´¢
+// ·µ»Ø×î³¤Ê±¼äºóÊ¹ÓÃµ½µÄÄÚ´æ·ÖÒ³ĞòºÅ,¼´OPTÓ¦¸ÃÌÔÌ­µÄÄÚ´æ·ÖÒ³,´«Èëµ±Ç°Ò³Ãæ×ßÏòĞòÁĞºÅ¿ªÊ¼ËÑË÷
 int will_longest_used(int cur)
 {
     int i, j;
-    int next_time[Msize]  = {0};   //è®°å½•ä¸‹æ¬¡å‡ºç°æ—¶é—´
+    int next_time[Msize]  = {0};   //¼ÇÂ¼ÏÂ´Î³öÏÖÊ±¼ä
     int longest_index = 0;
     for (i = 0; i < Msize; i++) {
         for (j = cur + 1; j < N; j++)
@@ -72,70 +84,220 @@ int will_longest_used(int cur)
     }
     return longest_index;
 }
-// æœ€ä½³ç½®æ¢ç®—æ³•(OPT)
+// LRUÖ§³Öº¯Êı, ¸ødwell×¤ÁôÊ±¼äÊı×éÌá¹©Ê±¼ä²½½ø
+void dwell_p(int * a, int x)
+{
+    for (int i = 0; i < Msize; ++i)
+    {
+        if (-1 != memory[i])
+            a[i]++;
+        if(x == memory[i]) a[i] = 0;
+    }
+    
+}
+// ×î¼ÑÖÃ»»Ëã·¨(OPT)
 void OPT()
 {
-    init();
-    int cur = 0;    // å½“å‰è¯·æ±‚åºå·
-    lack = 0;       // ç¼ºé¡µæ•°ç½®ä¸º0
+    init(0);
+    int cur = 0;    // µ±Ç°ÇëÇóĞòºÅ
     for (cur = 0; cur < N; ++cur)
     {
-        if (-1 != is_full())
-        {   // å†…å­˜æœ‰ç©ºä½æ‰§è¡Œå¾ªç¯ä½“
+        if(-1 != is_in(Pages[cur]))
+        {   // Ò³ÃæÔÚÄÚ´æÖĞ
+            printf("%d\t|\n",Pages[cur]);
+        }
+        else if (-1 != is_full())
+        {   // ÄÚ´æÓĞ¿ÕÎ»Ö´ĞĞ´úÂë
             memory[is_full()] = Pages[cur];
-            lack++;
-            printf("%d\t",Pages[cur]);
+            lack[0]++;
+            printf("%d\t|",Pages[cur]);
             print_m(cur);
         }
         else if (-1 == is_in(Pages[cur]))
-        {   // æ˜¯å¦åœ¨å†…å­˜ä¸­, ä¸åœ¨æ‰§è¡Œå¾ªç¯ä½“
+        {   // ÊÇ·ñÔÚÄÚ´æÖĞ, ²»ÔÚÖ´ĞĞ´úÂë
             memory[will_longest_used(cur)] = Pages[cur];
-            lack++;
-            printf("%d\t",Pages[cur]);
+            lack[0]++;
+            printf("%d\t|",Pages[cur]);
             print_m(cur);
         }
-        else
-        {
-            printf("%d\n",Pages[cur]);
-        }
     }
-    
 }
-
-// å…ˆè¿›å…ˆå‡º(FIFO)é¡µé¢ç½®æ¢ç®—æ³•
+// ÏÈ½øÏÈ³ö(FIFO)Ò³ÃæÖÃ»»Ëã·¨
 void FIFO()
 {
-    init();
+    init(1);
     int oldest = 0;
     for (int i = 0; i < N; i++)
     {
-        if (-1 != is_full())
-        {   // å†…å­˜æœ‰ç©ºä½æ‰§è¡Œå¾ªç¯ä½“
+        if(-1 != is_in(Pages[i]))
+        {   // Ò³ÃæÔÚÄÚ´æÖĞ
+            printf("%d\t|\n",Pages[i]);
+        }
+        else if (-1 != is_full())
+        {   // ÄÚ´æÓĞ¿ÕÎ»Ö´ĞĞ´úÂë
             memory[is_full()] = Pages[i];
-            lack++;
-            printf("%d\t",Pages[i]);
+            lack[1]++;
+            printf("%d\t|",Pages[i]);
             print_m(i);
         }
-        else if(-1 == is_in(Pages[i]))// æ— ç©ºä½ç›´æ¥æ·˜æ±°æœ€å…ˆæ¥çš„
+        else if(-1 == is_in(Pages[i]))// ÎŞ¿ÕÎ»Ö±½ÓÌÔÌ­×îÏÈÀ´µÄ
         {
             memory[oldest] = Pages[i];
             oldest = (++oldest)%Msize;
-            printf("%d\t",Pages[i]);
+            lack[1]++;
+            printf("%d\t|",Pages[i]);
             print_m(i);
         }
-        else
-        {
-            printf("%d\n",Pages[i]);
-        }
-        
+
     }
-    
+}
+// ×î½ü×î¾ÃÎ´Ê¹ÓÃ(Last Recently Used)ÖÃ»»Ëã·¨
+void LRU()
+{
+    int dwell[Msize] = {0};   //´æ´¢Ã¿¸öÄÚ´æÒ³ÃæÖĞÎ´Ê¹ÓÃÊ±¼ä³¤¶Ì
+    init(2);
+    for (int i = 0; i < N; i++)
+    {
+        if(-1 != is_in(Pages[i]))
+        {   // Ò³ÃæÔÚÄÚ´æÖĞ
+            printf("%d\t|\n",Pages[i]);
+        }
+        else if (-1 != is_full())
+        {   // ÄÚ´æÓĞ¿ÕÎ»Ö´ĞĞ´úÂë
+            memory[is_full()] = Pages[i];
+            lack[2]++;
+            printf("%d\t|",Pages[i]);
+            print_m(i);
+        }
+        else if(-1 == is_in(Pages[i])) // ÎŞ¿ÕÎ»ÌÔÌ­×¤ÁôÊ±¼ä×î³¤µÄ
+        {
+            memory[max(dwell, Msize)] = Pages[i];
+            lack[2]++;
+            printf("%d\t|",Pages[i]);
+            print_m(i);
+        }
+
+        dwell_p(dwell,Pages[i]);
+    }
+}
+// ÎªClockÖÃ»»Ëã·¨ÕÒµ½ÏÂ¸öĞèÒªÌÔÌ­µÄÄÚ´æÒ³Ãæ²¢ĞŞ¸Ä·ÃÎÊÎ»,´«ÈëÎªµ±Ç°Ê±ÖÓÖ¸ÕëÎ»ÖÃ,·µ»ØÖµÎªÌÔÌ­Ò³ÃæĞòºÅ
+int next_clock_page(int R[],int *p)
+{
+    int i,j;
+    for ( i = *p,j = 0; j < Msize; i = (++i) % Msize,++j)
+    {
+        if(R[i] == 0) {
+            R[i] = 1;
+            *p = (*p + 1) % Msize;
+            return i;
+        }
+    }
+    for ( i = 0; i < Msize; i++)
+    {
+        R[i] = 0;
+    }
+    i = *p;
+    *p = (*p + 1) % Msize;
+    return i;
+}
+// ClockÖÃ»»Ëã·¨
+void CLOCK()
+{
+    int R[Msize];
+    int p = 0;
+    init(3);
+    for (int i = 0; i < N; i++)
+    {
+        if(-1 != is_in(Pages[i]))
+        {   // Ò³ÃæÔÚÄÚ´æÖĞ
+            R[is_in(Pages[i])] = 1;
+            printf("%d\t|\n",Pages[i]);
+        }
+        else if (-1 != is_full())
+        {   // ÄÚ´æÓĞ¿ÕÎ»Ö´ĞĞ´úÂë
+            R[is_full()] = 1;           // ÖÃ·ÃÎÊÎ»Îª 1
+            memory[is_full()] = Pages[i];
+            // p = (++p) % Msize;
+            lack[3]++;
+            printf("%d\t|",Pages[i]);
+            print_m(i);
+
+        }
+        else if(-1 == is_in(Pages[i]))  // ÎŞ¿ÕÎ»ÇÒ²»ÔÚÄÚ´æÖĞÔò½øÈëÌÔÌ­Á÷³Ì
+        {
+            memory[next_clock_page(R, &p)] = Pages[i];           
+            lack[3]++;
+            printf("%d\t|",Pages[i]);
+            print_m(i);
+        }
+    }    
 }
 
+// ´òÓ¡²Ëµ¥
+void print_menu()
+{
+    printf("\n=============²Ëµ¥================\n");
+    printf("0. ÍË³ö\n");
+    printf("1. OPTËã·¨ÊµÏÖ\n");
+    printf("2. FIFOËã·¨ÊµÏÖ\n");
+    printf("3. LRUËã·¨ÊµÏÖ\n");
+    printf("4. CLOCKËã·¨\n");
+    printf("5. ÏÔÊ¾È±Ò³ÂÊ¶Ô±È±í\n");
+    printf("=================================\n");
+    printf("ÇëÊäÈëÊı×ÖÒÔÑ¡Ôñ:");
+}
+// ´òÓ¡È±Ò³ÂÊ¶Ô±È±í
+void print_table()
+{
+    printf("\n**************************************\n");
+    printf("Ëã·¨\tÈ±Ò³Êı\tÈ±Ò³ÂÊ\n");
+    printf("OPT\t");printf("%d\t%.2f\n",lack[0],lack[0]*1.0/N);
+    printf("FIFO\t");printf("%d\t%.2f\n",lack[1],lack[1]*1.0/N);
+    printf("LRU\t");printf("%d\t%.2f\n",lack[2],lack[2]*1.0/N);
+    printf("CLOCK\t");printf("%d\t%.2f\n",lack[3],lack[3]*1.0/N);
+    printf("\n**************************************\n");
+}
+// ³ÌĞòÈë¿Ú
 int main()
 {
-
-    FIFO(); 
-    
-    return 0;
+    printf("***********Ò³ÃæÌÔÌ­/ÖÃ»»Ëã·¨***********\n");
+    print_menu();
+    int choice;
+    scanf("%d", &choice);
+    while (choice)
+    {
+        switch (choice)
+        {
+        case 1:
+            printf("\n**************************************\n");
+            printf("OPTËã·¨ÄÚ´æÒ³ÃæÒıÓÃĞòÁĞÈçÏÂ:\n");
+            OPT();
+            printf("\n**************************************\n");
+            break;
+        case 2:
+            printf("\n**************************************\n");
+            printf("FIFOËã·¨ÄÚ´æÒ³ÃæÒıÓÃĞòÁĞÈçÏÂ:\n");
+            FIFO();
+            printf("\n**************************************\n");
+            break;
+        case 3:
+            printf("\n**************************************\n");
+            printf("LRUËã·¨ÄÚ´æÒ³ÃæÒıÓÃĞòÁĞÈçÏÂ:\n");
+            LRU();
+            printf("\n**************************************\n");
+            break;
+        case 4:
+            printf("\n**************************************\n");
+            printf("CLOCKËã·¨ÄÚ´æÒ³ÃæÒıÓÃĞòÁĞÈçÏÂ:\n");
+            CLOCK();
+            printf("\n**************************************\n");
+            break;
+        case 5:
+            print_table();
+        }
+        print_menu();
+        scanf("%d",&choice);
+    }
+    printf("*******************ÍË³ö³ÌĞò!*******************\n");
+    return 0;    
 }
