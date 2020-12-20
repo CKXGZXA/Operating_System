@@ -60,9 +60,11 @@ def print_table():
     """
     打印对比表
     """
+    print("=" * 34)
     print("算法 " + "总寻道长度 " + "平均寻道长度")
     for key,value in correlation_table.items():
         print("{} {:^10} {:^10.1f}".format(key,value["总寻道长度"],value["平均寻道长度"]))
+    print("=" * 34)
         
 def FCFS(begin = 100):
     """
