@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from ast import literal_eval
 
 # 磁盘访问请求序列
 request_sequense = [55,58,39,18,90,160,150,38,184]
@@ -12,7 +11,7 @@ def print_sequece(sch, begin = 100):
     print("从" + str(begin) + "号磁道开始")
     print("被访问的下一个磁道号 移动距离(磁道数)")
     for key, value in sch.items():
-        print(key,value)
+        print("{:^18}{:^16}".format(key,value))
     sum = 0
     for value in sch.values():
         sum += value
@@ -67,7 +66,7 @@ def print_table():
         
 def FCFS(begin = 100):
     """
-    先来先服务(FIFO), 传入参数为开始磁道号, 默认为100
+    先来先服务(FCFS), 传入参数为开始磁道号, 默认为100
     """
     t1 = begin
     t2 = 0
@@ -143,7 +142,6 @@ def print_menu():
     print("5.  显示对比表")
     print("=" * 33)
 
-
 def main():
     """
     程序入口
@@ -172,6 +170,5 @@ def main():
             print_table()
         print_menu()
         choice = int(input("请输入你的选择:"))        
-
 
 main()
